@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profitell Security Consulting · Everyday Security Workbench</title>
+<style>
+:root{--bg:#0e1116;--panel:#161b22;--panel2:#1c232c;--line:#2a323d;--tx:#e6edf3;--mut:#8b98a8;--acc:#4da3ff;--ok:#3fb950;--warn:#d29922;--bad:#f85149;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+header h1{font-size:15px;margin:0;font-weight:650;letter-spacing:.2px}header h1 span{color:var(--mut);font-weight:400}
+nav{display:flex;gap:4px;margin-left:auto}nav button,.btn{background:transparent;color:var(--mut);border:1px solid transparent;padding:6px 12px;border-radius:6px;cursor:pointer;font:inherit}
+nav button.on{color:var(--tx);background:var(--panel2);border-color:var(--line)}nav button:hover,.btn:hover{color:var(--tx)}
+.btn{border-color:var(--line);background:var(--panel2);color:var(--tx)}.btn.pri{background:var(--acc);color:#04111f;border-color:var(--acc);font-weight:600}.btn:disabled{opacity:.4;cursor:not-allowed}
+main{padding:20px;max-width:1500px;margin:auto}h2{font-size:16px;margin:0 0 12px}h3{font-size:13px;margin:18px 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}.card .n{font-size:26px;font-weight:700}.card .l{color:var(--mut);font-size:12px}
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}th{background:var(--panel2);color:var(--mut);font-size:12px;font-weight:600;position:sticky;top:0;cursor:pointer;white-space:nowrap}
+tr.row:hover{background:var(--panel2);cursor:pointer}td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}.mono{font-family:var(--mono);font-size:12px}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;border:1px solid var(--line);color:var(--mut)}
+.tag.open{color:var(--ok);border-color:#1f6f31}.tag.restricted{color:var(--bad);border-color:#7a2723}.tag.other,.tag.unknown{color:var(--warn);border-color:#6b4f12}
+.tag.identical{color:var(--bad);border-color:#7a2723}.tag.modified{color:var(--warn);border-color:#6b4f12}.tag.new{color:var(--ok);border-color:#1f6f31}
+.bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}input,select,textarea{background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font:inherit}
+input[type=search]{min-width:260px}textarea{width:100%;min-height:62vh;font:12.5px/1.5 var(--mono);resize:vertical;tab-size:2;white-space:pre}
+.split{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:14px;align-items:start}.scroll{max-height:70vh;overflow:auto;border-radius:8px}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;margin:0;overflow:auto;max-height:66vh;font:12.5px/1.5 var(--mono)}
+.add{color:var(--ok)}.del{color:var(--bad)}.hunk{color:var(--acc)}.hit{background:#4a3b0a}
+.note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);padding:10px 14px;border-radius:6px;margin-bottom:14px;color:var(--mut)}.note b{color:var(--tx)}
+.crumb{color:var(--mut);margin-bottom:10px}.crumb a{color:var(--acc);cursor:pointer}.tabs{display:flex;gap:4px;margin-bottom:10px}.tabs button{background:var(--panel);border:1px solid var(--line);color:var(--mut);padding:5px 12px;border-radius:6px;cursor:pointer}.tabs button.on{color:var(--tx);background:var(--panel2)}
+.toast{position:fixed;right:16px;bottom:16px;background:var(--panel2);border:1px solid var(--line);padding:10px 16px;border-radius:8px}
+</style></head><body>
+<header><h1>Profitell Security Consulting <span>· Everyday Security Workbench</span></h1><span class="tag">localhost only · originals read-only</span>
+<nav id="nav"></nav></header>
+<main id="app">Loading…</main>
+<script>
+const TOKEN="__TOKEN__";
+const $=(s,e=document)=>e.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const api=async(p,o)=>{const r=await fetch(p,o);const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j};
+const post=(p,b)=>api(p,{method:"POST",headers:{"X-Token":TOKEN,"Content-Type":"application/json"},body:JSON.stringify(b)});
+const toast=m=>{const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2800)};
+let BR=[],view="overview",cur=null,state={q:"",lic:"",sort:"id",dir:1};
+const NAV=[["overview","Overview"],["inventory","Brain inventory"],["copyright","Copyright explorer"]];
+function nav(){$("#nav").innerHTML=NAV.map(([k,l])=>`<button class="${view===k||(view==="brain"&&k==="inventory")?"on":""}" data-k="${k}">${l}</button>`).join("");
+ $("#nav").onclick=e=>{const k=e.target.dataset.k;if(k){view=k;cur=null;render()}}}
+const sumP=o=>Object.values(o||{}).reduce((a,b)=>a+b,0);
+async function load(){BR=(await api("/api/brains")).brains;render()}
+function render(){nav();({overview,inventory,brain,copyright})[view]()}
+
+function overview(){
+ const sec=BR.filter(b=>b.baseline||b.is_baseline).sort((a,b)=>a.id.localeCompare(b.id));
+ const vault=BR.filter(b=>b.kind==="vault brain").length,restricted=BR.filter(b=>b.license_class==="restricted").length;
+ 
+ $("#app").innerHTML=`<h2>Overview</h2>
+ <div class="note"><b>All numbers on this page are measured from the files on this Mac</b>, not estimated. Similarity is evidence for investigation, not a legal determination of ownership. A file without a copyright notice is not thereby free of restrictions.</div>
+ <div class="cards">
+  <div class="card"><div class="n">${BR.length}</div><div class="l">brain / skill folders discovered</div></div>
+  <div class="card"><div class="n">${vault}</div><div class="l">vault brains (have a wiki/ folder)</div></div>
+  <div class="card"><div class="n">${BR.length-vault}</div><div class="l">skill / plugin packages</div></div>
+  <div class="card"><div class="n">${restricted}</div><div class="l">with a proprietary / source-available / custom license</div></div>
+  <div class="card"><div class="n">${BR.reduce((a,b)=>a+b.files,0).toLocaleString()}</div><div class="l">files in total</div></div>
+  <div class="card"><div class="n">${BR.reduce((a,b)=>a+b.copyright_hits,0).toLocaleString()}</div><div class="l">copyright / license / author wording hits</div></div></div>
+ <h2>Original as provided vs our copies</h2>
+ <table><thead><tr><th>Copy</th><th>Version</th><th class="num">Files</th><th class="num">Pillars</th><th class="num">Notes (.md)</th><th class="num">Copyright hits</th><th class="num">Identical to original</th><th class="num">Modified</th><th class="num">New</th><th class="num">Lines from original</th></tr></thead><tbody>
+ ${sec.map(b=>{const p=b.provenance;const o=!b.baseline;return `<tr class="row" data-id="${esc(b.id)}"><td><b>${o?"ORIGINAL as provided":b.id.includes("v1.3.0")?"later build":"Our copy"}</b><div class="mono" style="color:var(--mut)">${esc(b.id)}</div></td><td>${esc(b.version)}</td><td class="num">${b.files}</td><td class="num">${Object.keys(b.pillars).length}</td><td class="num">${b.notes}</td><td class="num">${b.copyright_hits}</td>
+ ${p?`<td class="num">${p.identical}</td><td class="num">${p.modified}</td><td class="num">${p.new}</td><td class="num"><b>${p.share_from_original}%</b></td>`:`<td class="num" colspan="4" style="color:var(--mut)">baseline (100% original)</td>`}</tr>`}).join("")}</tbody></table>
+ <p style="color:var(--mut)">"Lines from original" = share of our substantive lines (40+ characters) that also appear, unchanged, in the same file of the original. Click a row to open that copy.</p>`;
+ $("#app").onclick=e=>{const r=e.target.closest("tr.row");if(r)open(r.dataset.id)}}
+
+function inventory(){
+ const rows=BR.filter(b=>(!state.q||(b.id+b.license+b.author).toLowerCase().includes(state.q.toLowerCase()))&&(!state.lic||b.license_class===state.lic))
+  .sort((a,b)=>{const x=a[state.sort],y=b[state.sort];return (typeof x==="number"?x-y:String(x).localeCompare(String(y)))*state.dir});
+ $("#app").innerHTML=`<h2>Brain inventory <span class="tag">${rows.length} of ${BR.length}</span></h2>
+ <div class="bar"><input type="search" id="q" placeholder="Search name, license, author…" value="${esc(state.q)}"><select id="lc"><option value="">All licenses</option>${["open","restricted","other","unknown"].map(l=>`<option ${state.lic===l?"selected":""}>${l}</option>`).join("")}</select></div>
+ <table><thead><tr>${[["name","Brain"],["kind","Kind"],["version","Version"],["license","License (as written)"],["author","Author"],["files","Files","num"],["notes","Notes","num"],["copyright_hits","© hits","num"]].map(([k,l,c])=>`<th class="${c||""}" data-s="${k}">${l}${state.sort===k?(state.dir>0?" ▲":" ▼"):""}</th>`).join("")}<th>Where</th></tr></thead><tbody>
+ ${rows.map(b=>`<tr class="row" data-id="${esc(b.id)}"><td><b>${esc(b.name)}</b></td><td>${esc(b.kind)}</td><td>${esc(b.version)}</td><td><span class="tag ${b.license_class}">${esc(b.license||"none found")}</span></td><td>${esc(b.author)}</td><td class="num">${b.files}</td><td class="num">${b.notes}</td><td class="num">${b.copyright_hits}</td><td class="mono" style="color:var(--mut)">${esc(b.id.split("/").slice(0,-1).join("/"))}</td></tr>`).join("")}</tbody></table>`;
+ $("#q").oninput=e=>{state.q=e.target.value;inventory();$("#q").focus();$("#q").setSelectionRange(99,99)};$("#lc").onchange=e=>{state.lic=e.target.value;inventory()};
+ $("#app").onclick=e=>{const h=e.target.closest("th[data-s]");if(h){state.dir=state.sort===h.dataset.s?-state.dir:1;state.sort=h.dataset.s;inventory();return}const r=e.target.closest("tr.row");if(r)open(r.dataset.id)}}
+
+function open(id){cur=BR.find(b=>b.id===id);view="brain";state.tab="pillars";state.file=null;render()}
+let FILES=[];
+async function brain(){
+ const b=cur;const p=b.provenance;
+ $("#app").innerHTML=`<div class="crumb"><a id="back">Inventory</a> / <b>${esc(b.name)}</b> <span class="tag ${b.license_class}">${esc(b.license||"no license found")}</span> ${b.editable?'<span class="tag open">editable</span>':'<span class="tag restricted">read-only original</span>'}</div>
+ <div class="cards"><div class="card"><div class="n">${b.files}</div><div class="l">files</div></div><div class="card"><div class="n">${Object.keys(b.pillars).length}</div><div class="l">pillar folders (${sumP(b.pillars)} notes)</div></div><div class="card"><div class="n">${b.copyright_hits}</div><div class="l">copyright wording hits</div></div>
+ ${p?`<div class="card"><div class="n">${p.share_from_original}%</div><div class="l">of our lines also in the original file</div></div><div class="card"><div class="n">${p.new}</div><div class="l">new files · ${p.modified} modified · ${p.identical} identical · ${p.removed} removed</div></div>`:""}</div>
+ <div class="bar">${b.editable?"":`<button class="btn pri" id="fork">Fork to editable workspace</button>`}<a class="btn" href="/api/export?id=${encodeURIComponent(b.id)}" download="copyright-${esc(b.name)}.csv">Export copyright CSV</a></div>
+ <div class="tabs" id="tabs">${[["pillars","Pillars"],["files","Files & editor"],["copyright","Copyright wording"]].map(([k,l])=>`<button data-t="${k}" class="${state.tab===k?"on":""}">${l}</button>`).join("")}</div><div id="pane"></div>`;
+ $("#back").onclick=()=>{view="inventory";render()};
+ if($("#fork"))$("#fork").onclick=async()=>{const n=prompt("Name for the workspace copy:",b.name+"-profitell");if(!n)return;try{const r=await post("/api/fork",{id:b.id,name:n});toast("Forked. Reloading…");BR=(await api("/api/brains")).brains;open(r.id)}catch(e){toast(e.message)}};
+ $("#tabs").onclick=e=>{if(e.target.dataset.t){state.tab=e.target.dataset.t;brain()}};
+ const pane=$("#pane");
+ if(state.tab==="pillars"){const bp=b.baseline_pillars,keys=[...new Set([...Object.keys(b.pillars),...Object.keys(bp||{})])].sort();
+  pane.innerHTML=`<table><thead><tr><th>Pillar (folder under wiki/)</th><th class="num">Notes in this copy</th>${bp?`<th class="num">Notes in original (v${esc(b.baseline_version)})</th><th class="num">Added by us</th>`:""}</tr></thead><tbody>${keys.map(k=>`<tr><td>${esc(k)}</td><td class="num">${b.pillars[k]||0}</td>${bp?`<td class="num">${bp[k]||0}</td><td class="num">${(b.pillars[k]||0)-(bp[k]||0)}</td>`:""}</tr>`).join("")||'<tr><td colspan=4>No wiki/ pillars (this is a skill/plugin package).</td></tr>'}</tbody></table>`}
+ if(state.tab==="copyright"){const h=(await api("/api/copyright?id="+encodeURIComponent(b.id))).hits;pane.innerHTML=hitsTable(h,true)}
+ if(state.tab==="files"){FILES=(await api("/api/files?id="+encodeURIComponent(b.id))).files;filesPane()}}
+function hitsTable(h,withSearch){return `<div class="bar"><input type="search" id="hq" placeholder="Filter wording or file…"><span class="tag">${h.length} hits</span></div><div class="scroll"><table><thead><tr><th>File</th><th class="num">Line</th><th>Exact text (verbatim)</th></tr></thead><tbody id="hb">${h.map(x=>`<tr><td class="mono">${esc(x.file)}</td><td class="num">${x.line}</td><td class="mono">${esc(x.text)}</td></tr>`).join("")}</tbody></table></div>`}
+document.addEventListener("input",e=>{if(e.target.id==="hq"){const q=e.target.value.toLowerCase();document.querySelectorAll("#hb tr").forEach(r=>r.style.display=r.textContent.toLowerCase().includes(q)?"":"none")}});
+
+function filesPane(){const f=state.fq||"",c=state.fc||"";
+ const rows=FILES.filter(x=>(!f||x.path.toLowerCase().includes(f.toLowerCase()))&&(!c||(c==="hits"?x.hits>0:x.class===c)));
+ $("#pane").innerHTML=`<div class="bar"><input type="search" id="fq" placeholder="Filter files…" value="${esc(f)}"><select id="fc"><option value="">All classes</option>${["identical","modified","new","hits"].map(k=>`<option value="${k}" ${c===k?"selected":""}>${k==="hits"?"has copyright wording":k}</option>`).join("")}</select><span class="tag">${rows.length} files</span></div>
+ <div class="split"><div class="scroll"><table><thead><tr><th>File</th><th>Class</th><th class="num">©</th></tr></thead><tbody>${rows.slice(0,800).map(x=>`<tr class="row" data-p="${esc(x.path)}"><td class="mono">${esc(x.path)}</td><td>${x.class?`<span class="tag ${x.class}">${x.class}</span>`:""}</td><td class="num">${x.hits||""}</td></tr>`).join("")}</tbody></table></div><div id="viewer" style="color:var(--mut)">Select a file to see Current / Original / Diff / Provenance.</div></div>`;
+ $("#fq").oninput=e=>{state.fq=e.target.value;filesPane();$("#fq").focus();$("#fq").setSelectionRange(99,99)};$("#fc").onchange=e=>{state.fc=e.target.value;filesPane()};
+ $("#pane").onclick=e=>{const r=e.target.closest("tr.row");if(r)openFile(r.dataset.p)}}
+
+async function openFile(path){const b=cur,x=FILES.find(f=>f.path===path),v=$("#viewer");
+ v.style.color="";v.innerHTML=`<div class="mono" style="margin-bottom:8px">${esc(path)}</div><div class="tabs" id="vt">${["Current","Original","Diff","Provenance"].map((t,i)=>`<button data-t="${t}" class="${i?"":"on"}">${t}</button>`).join("")}</div><div id="vb"></div>`;
+ const show=async t=>{[...$("#vt").children].forEach(c=>c.classList.toggle("on",c.dataset.t===t));const vb=$("#vb");
+  try{
+  if(!x.text){vb.innerHTML=`<pre>(binary / non-text file, ${x.size} bytes)</pre>`;return}
+  if(t==="Current"){const c=(await api(`/api/file?id=${encodeURIComponent(b.id)}&path=${encodeURIComponent(path)}`)).content;
+   vb.innerHTML=b.editable?`<textarea id="ed" spellcheck="false">${esc(c)}</textarea><div class="bar" style="margin-top:8px"><button class="btn pri" id="sv">Save (backs up first)</button></div>`:`<pre>${hl(c)}</pre>`;
+   if(b.editable)$("#sv").onclick=async()=>{try{await post("/api/save",{id:b.id,path,content:$("#ed").value});toast("Saved · previous version backed up")}catch(e){toast(e.message)}}}
+  if(t==="Original"){const c=(await api(`/api/original?id=${encodeURIComponent(b.id)}&path=${encodeURIComponent(path)}`)).content;vb.innerHTML=c===null?`<pre>(no original: this file is new, or no baseline for this brain)</pre>`:`<pre>${hl(c)}</pre>`}
+  if(t==="Diff"){const d=(await api(`/api/diff?id=${encodeURIComponent(b.id)}&path=${encodeURIComponent(path)}`)).diff;vb.innerHTML=`<pre>${d.split("\n").map(l=>`<div class="${l[0]==="+"&&l[1]!=="+"?"add":l[0]==="-"&&l[1]!=="-"?"del":l[0]==="@"?"hunk":""}">${esc(l)||" "}</div>`).join("")}</pre>`}
+  if(t==="Provenance"){const h=(await api("/api/copyright?id="+encodeURIComponent(b.id))).hits.filter(h=>h.file===path);
+   vb.innerHTML=`<table><tbody><tr><td>Class vs original</td><td>${x.class?`<span class="tag ${x.class}">${x.class}</span>`:"no baseline for this brain"}</td></tr><tr><td>Size</td><td>${x.size} bytes</td></tr><tr><td>Copyright wording in this file</td><td>${h.length?h.map(y=>`<div class="mono">L${y.line}: ${esc(y.text)}</div>`).join(""):"none found. <i>Not a statement that the file is unrestricted.</i>"}</td></tr><tr><td>Verdict</td><td>${x.class==="identical"?"Original file, byte-for-byte. Must be replaced by independent work or kept with attribution.":x.class==="modified"?"Derived from the original file. Still carries its notices unless rewritten from a specification.":x.class==="new"?"Not in the original package. Check who wrote it (our tooling vs. generated) before treating as ours.":"Unknown."}</td></tr></tbody></table>`}
+  }catch(err){vb.innerHTML=`<pre>${esc(err.message)}</pre>`}};
+ $("#vt").onclick=e=>{if(e.target.dataset.t)show(e.target.dataset.t)};show("Current")}
+const hl=c=>esc(c).split("\n").map(l=>/Copyright|\(c\) 20\d\d|Proprietary|Source-Available|All rights reserved|authorized collaborators|paid customers/i.test(l)?`<span class="hit">${l}</span>`:l).join("\n");
+
+async function copyright(){
+ $("#app").innerHTML=`<h2>Copyright explorer</h2><div class="note">Pick a brain to list every line of copyright, license, author and community-link wording, verbatim, with file and line.</div><div class="bar"><select id="cb">${BR.filter(b=>b.copyright_hits).sort((a,b)=>b.copyright_hits-a.copyright_hits).map(b=>`<option value="${esc(b.id)}" >${esc(b.id)} (${b.copyright_hits})</option>`).join("")}</select></div><div id="ch"></div>`;
+ const go=async()=>{state.cb=$("#cb").value;const h=(await api("/api/copyright?id="+encodeURIComponent(state.cb))).hits;$("#ch").innerHTML=hitsTable(h)};
+ $("#cb").onchange=go;go()}
+load().catch(e=>$("#app").textContent="Error: "+e.message);
+</script></body></html>
