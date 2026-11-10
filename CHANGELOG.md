@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Full independent rewrite of the knowledge base: 8 pillars (tls, http-headers, mail-authentication, web-app, server-hardening, dns, backups-and-recovery, privacy-compliance), written from public standards. The site checker now also runs SPF, DMARC, MTA-STS/TLS-RPT, nameserver, DNSSEC and zone-transfer checks and follows redirects before judging headers.
+- Added `docs/REVIEW-QUEUE.md` (open verification items) and per-pillar source ledgers in `docs/sources.d/`.
 - Knowledge base started: TLS (TLS-001..006) and HTTP headers (HDR-001..010), all written from public standards; source ledger in `docs/sources.md`.
 - Added `tools/kb/lint.py`, `tools/kb/similarity.py` and `tools/kb/build_index.py` (generates `kb/INDEX.md` and the README counts).
 - Every check now carries tags, target, method, tool and an automation flag.

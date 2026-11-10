@@ -16,8 +16,8 @@ for dp, _, fn in os.walk(os.path.join(ROOT, "kb")):
 C.sort(key=lambda c: (c["pillar"], c["id"]))
 SEV = ["critical", "high", "medium", "low", "info"]; P = sorted({c["pillar"] for c in C}); auto = sum(c["automated"] == "yes" for c in C)
 tags = collections.Counter(t for c in C for t in c["tags"])
-NSRC = len(re.findall(r"^\| S-", open(os.path.join(ROOT, "docs", "sources.md")).read(), re.M))
-counts = [f"| Pillars | **{len(P)}** |", f"| Security checks | **{len(C)}** |", f"| Run automatically by the site checker | **{auto}** |", f"| Manual (need server access or a sign-in) | **{len(C)-auto}** |", f"| Tags | **{len(tags)}** |", f"| Public sources cited | **{NSRC}** |"]
+NSRC = len({i for l in [os.path.join(ROOT, "docs", "sources.md")] + [os.path.join(ROOT, "docs", "sources.d", f) for f in os.listdir(os.path.join(ROOT, "docs", "sources.d")) if f.endswith(".md")] for i in re.findall(r"^\| (S-[A-Z0-9\-]+) \|", open(l).read(), re.M)})
+counts = [f"| Pillars | **{len(P)}** |", f"| Security checks | **{len(C)}** |", f"| Run automatically by the site checker | **{auto}** |", f"| Manual (server access, sign-in or human review) | **{len(C)-auto}** |", f"| Tags | **{len(tags)}** |", f"| Public sources cited | **{NSRC}** |"]
 per = ["| Pillar | Checks | Critical | High | Medium | Low | Automated |", "|---|---:|---:|---:|---:|---:|---:|"]
 for p in P:
     x = [c for c in C if c["pillar"] == p]; per.append(f"| [`{p}`](kb/{p}/) | {len(x)} | " + " | ".join(str(sum(c['severity'] == s for c in x) or "") for s in SEV[:4]) + f" | {sum(c['automated']=='yes' for c in x)}/{len(x)} |")

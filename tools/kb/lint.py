@@ -5,7 +5,8 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 REQ = ["id", "title", "pillar", "severity", "standards", "sources", "tags", "target", "method", "tool", "automated", "status", "reviewed", "author"]
 SECTIONS = ["## Why it matters", "## How to test", "## Pass criteria", "## Fix", "## Risk and rollback"]
 SEV = {"critical", "high", "medium", "low", "info"}
-src_ids = set(re.findall(r"^\| (S-[A-Z0-9\-]+) \|", open(os.path.join(ROOT, "docs", "sources.md")).read(), re.M))
+LEDGERS = [os.path.join(ROOT, "docs", "sources.md")] + sorted(os.path.join(ROOT, "docs", "sources.d", f) for f in os.listdir(os.path.join(ROOT, "docs", "sources.d")) if f.endswith(".md"))
+src_ids = set(i for l in LEDGERS for i in re.findall(r"^\| (S-[A-Z0-9\-]+) \|", open(l).read(), re.M))
 errs, seen, n = [], {}, 0
 for dp, _, fn in os.walk(os.path.join(ROOT, "kb")):
     for f in sorted(fn):

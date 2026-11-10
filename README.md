@@ -12,31 +12,37 @@ By [Profitell Security Consulting](https://www.profitell.com/) · [profitell.com
 <!-- COUNTS:START -->
 | Measured from `kb/` | Count |
 |---|---:|
-| Pillars | **2** |
-| Security checks | **16** |
-| Run automatically by the site checker | **13** |
-| Manual (need server access or a sign-in) | **3** |
-| Tags | **31** |
-| Public sources cited | **22** |
+| Pillars | **8** |
+| Security checks | **78** |
+| Run automatically by the site checker | **19** |
+| Manual (server access, sign-in or human review) | **59** |
+| Tags | **196** |
+| Public sources cited | **153** |
 
 | Pillar | Checks | Critical | High | Medium | Low | Automated |
 |---|---:|---:|---:|---:|---:|---:|
+| [`backups-and-recovery`](kb/backups-and-recovery/) | 9 |  | 7 | 2 |  | 0/9 |
+| [`dns`](kb/dns/) | 9 |  | 4 | 4 | 1 | 3/9 |
 | [`http-headers`](kb/http-headers/) | 10 |  | 4 | 3 | 3 | 9/10 |
+| [`mail-authentication`](kb/mail-authentication/) | 10 | 1 | 5 | 4 |  | 3/10 |
+| [`privacy-compliance`](kb/privacy-compliance/) | 10 |  | 7 | 3 |  | 0/10 |
+| [`server-hardening`](kb/server-hardening/) | 12 |  | 7 | 5 |  | 0/12 |
 | [`tls`](kb/tls/) | 6 |  | 4 | 1 | 1 | 4/6 |
-| **Total** | **16** | **** | **8** | **4** | **4** | **13/16** |
+| [`web-app`](kb/web-app/) | 12 | 1 | 7 | 4 |  | 0/12 |
+| **Total** | **78** | **2** | **45** | **26** | **5** | **19/78** |
 <!-- COUNTS:END -->
 
 Full list with tags, tools and severity: [`kb/INDEX.md`](kb/INDEX.md). The counts above are generated from the files in `kb/` by `tools/kb/build_index.py`, so they always match the content.
 
-**Planned pillars, not yet written:** mail authentication (SPF, DKIM, DMARC), web application basics, server hardening, DNS hygiene, backups and recovery. Nothing in this list is counted above.
+**Planned pillars, not yet written:** incident response, cloud and SaaS accounts, WordPress and other CMS, containers, vendor and supply-chain risk. Nothing in this list is counted above.
 
 ## What you can check
 
 | You want to check | Pillars | Run it with |
 |---|---|---|
-| Any website you own or may test, from the outside | `tls`, `http-headers` | `tools/check/everyday_check.py` or the workbench page "Check a website" |
-| A server you run (all its domains, mail records, exposed ports, pending updates) | the same, plus host checks | `tools/scanner/security_review.py` (run on the server) |
-| One specific item by hand | any check in `kb/` | each check file lists the exact commands |
+| Any website or domain you own or may test, from the outside | `tls`, `http-headers`, `mail-authentication`, `dns` (19 automatic checks) | `tools/check/everyday_check.py` or the workbench page "Check a website" |
+| A server you run (all its domains, mail records, exposed ports, pending updates) | the same, plus `server-hardening` (read-only commands in each check) | `tools/scanner/security_review.py` (run on the server) |
+| One specific item by hand, including code, backups and privacy practice | any check in `kb/` (`web-app`, `backups-and-recovery`, `privacy-compliance` are review-based) | each check file lists the exact commands or review steps |
 
 ## How you check
 

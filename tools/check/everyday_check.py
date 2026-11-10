@@ -4,8 +4,8 @@
     python3 tools/check/everyday_check.py example.com
     python3 tools/check/everyday_check.py https://example.com --json
 
-Only a few ordinary requests are made (one HTTPS page, one HTTP page, one TLS handshake per protocol, one DNS CAA
-lookup, two requests carrying a test Origin header). It never probes paths, ports or logins.
+Only a few ordinary requests are made (one HTTPS page, one HTTP page, one TLS handshake per protocol, DNS lookups for
+CAA, SPF, DMARC, MTA-STS, NS and DS, one zone-transfer attempt per nameserver, two requests carrying a test Origin header). It never probes paths, ports or logins.
 Run it only against sites you own or are allowed to test.
 
 Result per check: PASS, FAIL, WARN, MANUAL (cannot be judged from outside; the check file says how to test it).
@@ -74,7 +74,11 @@ def run(host):
     else: res("TLS-005", "MANUAL", "dig is not installed; run: dig +short CAA " + host)
     res("TLS-006", "MANUAL", "renewal automation lives on the server; see kb/tls/TLS-006.md")
     # ---- headers ----
-    try: st, h, cookies = req(host, 443)
+    try:
+        st, h, cookies = req(host, 443); fhost, hops = host, 0
+        while st in (301, 302, 303, 307, 308) and h.get("location", "").lower().startswith("https://") and hops < 3:
+            u = urlparse(h["location"]); fhost, hops = u.hostname, hops + 1; st, h, cookies = req(u.hostname, 443, (u.path or "/") + ("?" + u.query if u.query else ""))
+        if hops: res("NOTE", "INFO", f"{host} redirects; header checks below were made on https://{fhost}/ after {hops} redirect(s)")
     except OSError as e:
         for i in ("HDR-%03d" % n for n in range(1, 11)): res(i, "MANUAL", "HTTPS page could not be fetched: " + str(e))
         return
@@ -113,11 +117,65 @@ def run(host):
         except OSError: pass
     res("HDR-010", "FAIL" if any("credentials" in p for p in probs) else "WARN" if probs else "PASS", "; ".join(probs) if probs else "no CORS reflection on the home page (test API paths by hand)")
 
+
+# ---------------- DNS and mail checks (dig only) ----------------
+TWO = {"co.uk", "org.uk", "gov.uk", "ac.uk", "com.au", "net.au", "co.nz", "com.br", "co.jp", "co.za", "com.mx", "com.cn", "co.in"}
+def apex_of(host):
+    p = host.split("."); return ".".join(p[-3:]) if ".".join(p[-2:]) in TWO and len(p) >= 3 else ".".join(p[-2:])
+def dig(*a):
+    try: return subprocess.run(["dig", "+short", "+time=5", "+tries=1", *a], capture_output=True, text=True, timeout=20).stdout.strip().splitlines()
+    except Exception: return []
+def txt(name): return [l.replace('" "', "").strip('"') for l in dig("TXT", name)]
+def spf_lookups(domain, depth=0, seen=None):
+    seen = seen or set()
+    if depth > 10 or domain in seen: return 0
+    seen.add(domain); recs = [t for t in txt(domain) if t.lower().startswith("v=spf1")]
+    if not recs: return 0
+    n = 0
+    for term in recs[0].split()[1:]:
+        t = term.lstrip("+-~?").lower()
+        if t.startswith(("include:", "redirect=")): n += 1 + spf_lookups(re.split("[:=]", t, 1)[1], depth + 1, seen)
+        elif t.split(":")[0].split("/")[0] in ("a", "mx", "ptr", "exists"): n += 1
+    return n
+def dns_mail(host):
+    if not shutil.which("dig"):
+        for i in ("MAIL-001", "MAIL-003", "MAIL-006", "DNS-004", "DNS-005", "DNS-006"): res(i, "MANUAL", "dig is not installed")
+        return
+    d = apex_of(host); mx = dig("MX", d); sends = bool(mx) and mx != ["0 ."]
+    spf = [t for t in txt(d) if t.lower().startswith("v=spf1")]
+    if len(spf) != 1: res("MAIL-001", "FAIL" if sends else "WARN", f"{len(spf)} SPF records found at {d} (need exactly 1)")
+    else:
+        n = spf_lookups(d); end = spf[0].split()[-1]
+        res("MAIL-001", "FAIL" if n > 10 or end.startswith("+") or "ptr" in spf[0] else "PASS" if end in ("-all", "~all") else "WARN", f"{spf[0][:90]} ; about {n} DNS lookups; ends {end}")
+    dm = [t for t in txt("_dmarc." + d) if t.lower().startswith("v=dmarc1")]
+    if len(dm) != 1: res("MAIL-003", "FAIL" if sends else "WARN", f"{len(dm)} DMARC records at _dmarc.{d}")
+    else:
+        pol = re.search(r"\bp=(none|quarantine|reject)", dm[0], re.I); rua = "rua=" in dm[0].lower()
+        res("MAIL-003", "PASS" if pol and rua else "WARN", f"{dm[0][:100]}" + ("" if rua else " ; no rua reporting address") + ("" if pol else " ; no valid p="))
+    sts = [t for t in txt("_mta-sts." + d) if t.startswith("v=STSv1")]; rpt = [t for t in txt("_smtp._tls." + d) if t.startswith("v=TLSRPTv1")]
+    if not sends: res("MAIL-006", "PASS", "domain does not receive mail (null or no MX): not applicable")
+    else:
+        mode = "?"
+        if sts:
+            try:
+                c = http.client.HTTPSConnection("mta-sts." + d, timeout=8); c.request("GET", "/.well-known/mta-sts.txt", headers={"User-Agent": UA}); body = c.getresponse().read(4096).decode("utf8", "ignore"); m = re.search(r"mode:\s*(\w+)", body); mode = m.group(1) if m else "?"
+            except Exception: mode = "policy unreachable"
+        res("MAIL-006", "PASS" if sts and rpt and mode == "enforce" else "WARN", f"MTA-STS record: {'yes' if sts else 'no'} (policy mode {mode}); TLS-RPT record: {'yes' if rpt else 'no'}")
+    ns = [x.rstrip(".") for x in dig("NS", d)]
+    res("DNS-004", "PASS" if len(ns) >= 2 else "FAIL", f"{len(ns)} nameservers: {', '.join(ns[:4])} (independence of the providers needs a manual look)")
+    ds = dig("DS", d); ad = "ad" in " ".join(subprocess.run(["dig", "+dnssec", "+time=5", "+tries=1", "A", d, "@1.1.1.1"], capture_output=True, text=True, timeout=20).stdout.split("flags:")[1:2]).split(";")[0].split() if shutil.which("dig") else False
+    res("DNS-005", ("PASS" if ad else "FAIL") if ds else "WARN", ("DS record published and validation " + ("succeeds" if ad else "FAILS (broken chain?)")) if ds else "no DS record: DNSSEC not enabled (record the decision if your registrar or DNS host cannot do it)")
+    leaks = []
+    for n in ns[:4]:
+        out = subprocess.run(["dig", "AXFR", d, "@" + n, "+time=5", "+tries=1"], capture_output=True, text=True, timeout=25).stdout
+        if re.search(r"\sSOA\s", out) and "Transfer failed" not in out and "REFUSED" not in out.upper(): leaks.append(n)
+    res("DNS-006", "FAIL" if leaks else "PASS" if ns else "MANUAL", ("zone transfer allowed by " + ", ".join(leaks)) if leaks else f"all {len(ns)} nameservers refused a zone transfer")
+
 def main():
     ap = argparse.ArgumentParser(description="Everyday Security site checker"); ap.add_argument("site"); ap.add_argument("--json", action="store_true")
     a = ap.parse_args(); host = urlparse(a.site if "//" in a.site else "//" + a.site).hostname
     if not host or not re.fullmatch(r"[A-Za-z0-9.-]+", host): sys.exit("give a host name such as example.com")
-    run(host); order = {"FAIL": 0, "WARN": 1, "MANUAL": 2, "PASS": 3}
+    run(host); dns_mail(host); order = {"FAIL": 0, "WARN": 1, "MANUAL": 2, "PASS": 3, "INFO": 4}
     if a.json: print(json.dumps({"site": host, "checked": dt.datetime.utcnow().isoformat() + "Z", "results": R}, indent=2))
     else:
         print(f"\nEveryday Security · {host} · {dt.date.today()}\n" + "-" * 78)
