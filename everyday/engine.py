@@ -37,6 +37,8 @@ def scan_site(site, checks, rules, only=None, deep=False, timeout=10):
             x.update(pillar=link.get("pillar") or rt[2], tags=link.get("tags", []), kb=link.get("file"))
             results.append(x)
     s, g = score(results)
-    return {"host": host, "name": site.get("name", host), "tags": site.get("tags", []), "owner": site.get("owner", ""), "criticality": site.get("criticality", ""),
+    hdr = (ctx._main or {}).get("headers", {}) if isinstance(ctx._main, dict) else {}
+    edge = "cloudflare" if "cloudflare" in hdr.get("server", "").lower() or "cf-ray" in hdr else None
+    return {"host": host, "edge": edge, "name": site.get("name", host), "tags": site.get("tags", []), "owner": site.get("owner", ""), "criticality": site.get("criticality", ""),
             "deep": ctx.deep, "started": dt.datetime.utcnow().isoformat() + "Z", "seconds": round(time.time() - t0, 1), "score": s, "grade": g,
             "tally": tally(results), "rules": stats, "results": results}
