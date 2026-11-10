@@ -2,14 +2,14 @@
 """Lint the knowledge base: required fields, known source IDs, required sections, unique IDs. Exit 1 on any problem."""
 import os, re, sys
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-REQ = ["id", "title", "pillar", "severity", "standards", "sources", "status", "reviewed", "author"]
+REQ = ["id", "title", "pillar", "severity", "standards", "sources", "tags", "target", "method", "tool", "automated", "status", "reviewed", "author"]
 SECTIONS = ["## Why it matters", "## How to test", "## Pass criteria", "## Fix", "## Risk and rollback"]
 SEV = {"critical", "high", "medium", "low", "info"}
 src_ids = set(re.findall(r"^\| (S-[A-Z0-9\-]+) \|", open(os.path.join(ROOT, "docs", "sources.md")).read(), re.M))
 errs, seen, n = [], {}, 0
 for dp, _, fn in os.walk(os.path.join(ROOT, "kb")):
     for f in sorted(fn):
-        if not f.endswith(".md"): continue
+        if not f.endswith(".md") or f == "INDEX.md": continue
         p = os.path.join(dp, f); t = open(p).read(); n += 1
         m = re.match(r"---\n(.*?)\n---\n", t, re.S)
         if not m: errs.append(f"{p}: no front matter"); continue

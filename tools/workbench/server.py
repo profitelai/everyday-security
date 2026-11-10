@@ -3,7 +3,7 @@
 Lists every brain with its author, license, pillars, notes and copyright wording; compares a copy with its original
 (provenance); edits files only inside workspace/ (originals stay read-only); every save is backed up first.
 Standard library only.   python3 server.py   ->   http://127.0.0.1:5090"""
-import os, re, json, hashlib, secrets, shutil, time, difflib
+import os, re, json, hashlib, secrets, shutil, time, difflib, socket, subprocess, sys
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
@@ -143,8 +143,21 @@ def provenance(root, base):
                     "substantive_lines": tot, "share_from_original": round(100 * his / tot, 1) if tot else 0}
 
 CACHE = {}
+CFILE = os.path.join(HERE, ".cache.json")
+try: DISK = json.load(open(CFILE))
+except Exception: DISK = {}
+def sig(root):
+    n = sz = mt = 0
+    for dp, dn, fn in os.walk(root):
+        dn[:] = [d for d in dn if d not in SKIP]
+        for f in fn:
+            try: st = os.stat(os.path.join(dp, f)); n += 1; sz += st.st_size; mt = max(mt, int(st.st_mtime))
+            except OSError: pass
+    return f"{n}:{sz}:{mt}"
 def info(i, refresh=False):
     if i in CACHE and not refresh: return CACHE[i]
+    b0 = baseline_of(i); key = sig(abspath(i)) + "|" + (sig(b0) if b0 and os.path.isdir(b0) else "")
+    if not refresh and i in DISK and DISK[i].get("sig") == key: CACHE[i] = DISK[i]["info"]; return CACHE[i]
     root = abspath(i); ver, lic, auth = meta(root); fl = files_of(root)
     b = baseline_of(i)
     d = {"id": i, "name": os.path.basename(root), "path": root, "kind": "vault brain" if (os.path.isdir(os.path.join(root, "wiki")) or os.path.isdir(os.path.join(root, "kb"))) else "skill / plugin",
@@ -153,7 +166,38 @@ def info(i, refresh=False):
          "baseline": rid(b) if b else None, "is_baseline": bool(UPSTREAM_SEC) and i == rid(UPSTREAM_SEC)}
     if b and os.path.isdir(b):
         _, summ = provenance(root, b); d["provenance"] = summ; d["baseline_pillars"] = pillars(b); d["baseline_version"] = meta(b)[0]
-    CACHE[i] = d; return d
+    CACHE[i] = d; DISK[i] = {"sig": key, "info": d}
+    try: json.dump(DISK, open(CFILE, "w"))
+    except OSError: pass
+    return d
+
+def kb_root():
+    for r in [p for p in os.environ.get("WORKBENCH_BRAINS", "").split(":") if p]:
+        if os.path.isdir(os.path.join(r, "kb")): return r
+    return None
+
+def parse_kb(root):
+    out = []
+    for dp, dn, fn in os.walk(os.path.join(root, "kb")):
+        for f in sorted(fn):
+            if not f.endswith(".md"): continue
+            t = open(os.path.join(dp, f), encoding="utf-8").read(); m = re.match(r"---\n(.*?)\n---\n(.*)", t, re.S)
+            if not m: continue
+            fm = {}
+            for l in m.group(1).splitlines():
+                if ": " in l:
+                    k, v = l.split(": ", 1); v = v.strip()
+                    fm[k] = [x.strip() for x in v[1:-1].split(",")] if v.startswith("[") else v.strip('"')
+            fm["body"] = m.group(2); fm["path"] = os.path.relpath(os.path.join(dp, f), root); out.append(fm)
+    return out
+
+def safe_host(h):
+    import ipaddress
+    if not re.fullmatch(r"[A-Za-z0-9.-]{1,253}", h or "") or "." not in h: raise ValueError("enter a host name such as example.com")
+    for a in socket.getaddrinfo(h, 443, proto=socket.IPPROTO_TCP):
+        ip = ipaddress.ip_address(a[4][0])
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved: raise ValueError("private and local addresses are not allowed")
+    return h
 
 def safe(i, rel):
     root = abspath(i); p = os.path.normpath(os.path.join(root, rel))
@@ -190,6 +234,10 @@ class Handler(BaseHTTPRequestHandler):
                 for h in hits_of(root): hits[h["file"]] = hits.get(h["file"], 0) + 1
                 out = [{"path": f, "size": os.path.getsize(os.path.join(root, f)), "text": is_text(f), "class": cls.get(f, ""), "hits": hits.get(f, 0)} for f in files_of(root)]
                 return self._send(200, {"files": out})
+            if u.path == "/api/kb":
+                r = kb_root()
+                if not r: return self._send(200, {"checks": []})
+                return self._send(200, {"checks": parse_kb(r), "pillars_planned": ["mail-authentication", "web-app", "server-hardening", "dns", "backups-and-recovery"]})
             if u.path == "/api/copyright": return self._send(200, {"hits": hits_of(abspath(q["id"]))})
             if u.path == "/api/file":
                 _, p = safe(q["id"], q["path"])
@@ -222,6 +270,12 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}"); u = urlparse(self.path)
             if u.path == "/api/fork":
                 new = fork(body["id"], body["name"]); return self._send(200, {"id": new})
+            if u.path == "/api/check":
+                if not body.get("consent"): return self._send(400, {"error": "confirm that you own the site or may test it"})
+                host = safe_host(body.get("host", "").strip().lower().replace("https://", "").replace("http://", "").split("/")[0])
+                r = kb_root(); script = os.path.join(r, "tools", "check", "everyday_check.py")
+                p = subprocess.run([sys.executable, "-I", script, host, "--json"], capture_output=True, text=True, timeout=120)
+                return self._send(200, json.loads(p.stdout))
             if u.path == "/api/save":
                 root, p = safe(body["id"], body["path"])
                 if not any(root == e or root.startswith(e + os.sep) for e in EDITABLE): return self._send(403, {"error": "read-only original: fork it to the workspace first"})

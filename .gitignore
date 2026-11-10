@@ -5,3 +5,4 @@ workspace/
 backups/
 imports/
 .env
+.cache.json

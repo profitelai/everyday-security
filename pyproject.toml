@@ -7,3 +7,7 @@ license = { text = "Apache-2.0" }
 requires-python = ">=3.9"
 authors = [{ name = "Profitell Security Consulting" }]
 keywords = ["security", "audit", "hardening", "small-business", "provenance"]
+
+[project.urls]
+Homepage = "https://www.profitell.com/"
+Repository = "https://github.com/profitelai/everyday-security"

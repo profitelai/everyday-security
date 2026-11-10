@@ -25,11 +25,11 @@ pre{background:var(--panel);border:1px solid var(--line);border-radius:8px;paddi
 .add{color:var(--ok)}.del{color:var(--bad)}.hunk{color:var(--acc)}.hit{background:#4a3b0a}
 .note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);padding:10px 14px;border-radius:6px;margin-bottom:14px;color:var(--mut)}.note b{color:var(--tx)}
 .crumb{color:var(--mut);margin-bottom:10px}.crumb a{color:var(--acc);cursor:pointer}.tabs{display:flex;gap:4px;margin-bottom:10px}.tabs button{background:var(--panel);border:1px solid var(--line);color:var(--mut);padding:5px 12px;border-radius:6px;cursor:pointer}.tabs button.on{color:var(--tx);background:var(--panel2)}
-.toast{position:fixed;right:16px;bottom:16px;background:var(--panel2);border:1px solid var(--line);padding:10px 16px;border-radius:8px}
+.pill{display:inline-block;padding:1px 8px;margin:1px 2px 1px 0;border-radius:99px;font-size:11px;background:#1d2a3a;color:#9cc7ff;cursor:pointer;border:1px solid #28405c}.pill.on{background:var(--acc);color:#04111f}.sev-critical,.sev-high{color:var(--bad)}.sev-medium{color:var(--warn)}.sev-low,.sev-info{color:var(--mut)}.PASS{color:var(--ok)}.FAIL{color:var(--bad)}.WARN{color:var(--warn)}.MANUAL{color:var(--mut)}.big{font-size:34px}.toast{position:fixed;right:16px;bottom:16px;background:var(--panel2);border:1px solid var(--line);padding:10px 16px;border-radius:8px}
 </style></head><body>
 <header><h1>Profitell Security Consulting <span>· Everyday Security Workbench</span></h1><span class="tag">localhost only · originals read-only</span>
 <nav id="nav"></nav></header>
-<main id="app">Loading…</main>
+<main id="app">Scanning this Mac… (the first start takes a few seconds; later starts are instant)</main><footer style="padding:18px 20px;color:var(--mut);border-top:1px solid var(--line);margin-top:30px">© 2026 Profitell Security Consulting · <a href="https://www.profitell.com/" target="_blank" rel="noopener" style="color:var(--acc)">profitell.com</a> · <a href="https://github.com/profitelai/everyday-security" target="_blank" rel="noopener" style="color:var(--acc)">github.com/profitelai/everyday-security</a></footer>
 <script>
 const TOKEN="__TOKEN__";
 const $=(s,e=document)=>e.querySelector(s);
@@ -37,13 +37,14 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const api=async(p,o)=>{const r=await fetch(p,o);const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j};
 const post=(p,b)=>api(p,{method:"POST",headers:{"X-Token":TOKEN,"Content-Type":"application/json"},body:JSON.stringify(b)});
 const toast=m=>{const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2800)};
-let BR=[],view="overview",cur=null,state={q:"",lic:"",sort:"id",dir:1};
-const NAV=[["overview","Overview"],["inventory","Brain inventory"],["copyright","Copyright explorer"]];
+let BR=[],view="checks",cur=null,state={q:"",lic:"",sort:"id",dir:1};
+const NAV=[["checks","Security checks"],["scan","Check a website"],["overview","Provenance"],["inventory","Brain inventory"],["copyright","Copyright explorer"]];
 function nav(){$("#nav").innerHTML=NAV.map(([k,l])=>`<button class="${view===k||(view==="brain"&&k==="inventory")?"on":""}" data-k="${k}">${l}</button>`).join("");
  $("#nav").onclick=e=>{const k=e.target.dataset.k;if(k){view=k;cur=null;render()}}}
 const sumP=o=>Object.values(o||{}).reduce((a,b)=>a+b,0);
-async function load(){BR=(await api("/api/brains")).brains;render()}
-function render(){nav();({overview,inventory,brain,copyright})[view]()}
+let BRP=null;const needBR=()=>BRP||(BRP=api("/api/brains").then(j=>{BR=j.brains}));
+async function load(){render();await needBR();if(!["checks","scan"].includes(view))render()}
+async function render(){nav();if(!["checks","scan"].includes(view)&&!BR.length){$("#app").textContent="Scanning this Mac… (first start takes a few seconds)";await needBR()}({checks,scan,overview,inventory,brain,copyright})[view]()}
 
 function overview(){
  const sec=BR.filter(b=>b.baseline||b.is_baseline).sort((a,b)=>a.id.localeCompare(b.id));
@@ -122,5 +123,34 @@ async function copyright(){
  $("#app").innerHTML=`<h2>Copyright explorer</h2><div class="note">Pick a brain to list every line of copyright, license, author and community-link wording, verbatim, with file and line.</div><div class="bar"><select id="cb">${BR.filter(b=>b.copyright_hits).sort((a,b)=>b.copyright_hits-a.copyright_hits).map(b=>`<option value="${esc(b.id)}" >${esc(b.id)} (${b.copyright_hits})</option>`).join("")}</select></div><div id="ch"></div>`;
  const go=async()=>{state.cb=$("#cb").value;const h=(await api("/api/copyright?id="+encodeURIComponent(state.cb))).hits;$("#ch").innerHTML=hitsTable(h)};
  $("#cb").onchange=go;go()}
+
+let KB=null;
+const md=t=>esc(t).replace(/```[a-z]*\n([\s\S]*?)```/g,(m,c)=>`<pre>${c}</pre>`).replace(/^## (.*)$/gm,"<h3>$1</h3>").replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\n\n/g,"<br><br>");
+async function checks(){
+ if(!KB)KB=await api("/api/kb");const C=KB.checks;
+ if(!C.length){$("#app").innerHTML='<div class="note">No knowledge base found next to this workbench.</div>';return}
+ const pill=[...new Set(C.map(c=>c.pillar))].sort(),sev=["critical","high","medium","low","info"];
+ const tags={};C.forEach(c=>c.tags.forEach(t=>tags[t]=(tags[t]||0)+1));
+ const q=(state.kq||"").toLowerCase(),tg=state.kt||"",pl=state.kp||"";
+ const rows=C.filter(c=>(!pl||c.pillar===pl)&&(!tg||c.tags.includes(tg))&&(!q||(c.id+c.title+c.tags.join(" ")).toLowerCase().includes(q)));
+ $("#app").innerHTML=`<h2>Everyday Security · security checks</h2>
+ <div class="note">Every number below is counted from the <b>kb/</b> folder of the repository, so it cannot drift from the real content. Checks are written from public standards, each one cites its sources. Planned but <b>not yet written</b>: ${KB.pillars_planned.map(esc).join(", ")}.</div>
+ <div class="cards"><div class="card"><div class="n big">${pill.length}</div><div class="l">pillars</div></div><div class="card"><div class="n big">${C.length}</div><div class="l">security checks</div></div><div class="card"><div class="n big">${C.filter(c=>c.automated==="yes").length}</div><div class="l">run automatically by the site checker</div></div><div class="card"><div class="n big">${C.filter(c=>c.automated!=="yes").length}</div><div class="l">manual (server access or sign-in needed)</div></div><div class="card"><div class="n big">${Object.keys(tags).length}</div><div class="l">tags</div></div></div>
+ <h3>Checks per pillar</h3><table><thead><tr><th>Pillar</th><th class="num">Checks</th>${sev.map(s=>`<th class="num">${s}</th>`).join("")}<th class="num">Automated</th></tr></thead><tbody>${pill.map(p=>{const x=C.filter(c=>c.pillar===p);return `<tr class="row" data-p="${esc(p)}"><td><b>${esc(p)}</b></td><td class="num">${x.length}</td>${sev.map(s=>`<td class="num">${x.filter(c=>c.severity===s).length||""}</td>`).join("")}<td class="num">${x.filter(c=>c.automated==="yes").length}/${x.length}</td></tr>`}).join("")}<tr><td><b>Total</b></td><td class="num"><b>${C.length}</b></td>${sev.map(s=>`<td class="num"><b>${C.filter(c=>c.severity===s).length||""}</b></td>`).join("")}<td class="num"><b>${C.filter(c=>c.automated==="yes").length}/${C.length}</b></td></tr></tbody></table>
+ <h3>Filter by tag</h3><div>${Object.entries(tags).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`<span class="pill ${tg===t?"on":""}" data-t="${esc(t)}">${esc(t)} · ${n}</span>`).join("")}</div>
+ <div class="bar" style="margin-top:12px"><input type="search" id="kq" placeholder="Search checks…" value="${esc(state.kq||"")}"><span class="tag">${rows.length} of ${C.length} checks${pl?" · pillar "+esc(pl):""}${tg?" · tag "+esc(tg):""}</span>${pl||tg||q?'<button class="btn" id="kclr">Clear filters</button>':""}</div>
+ <div class="split"><div class="scroll"><table><thead><tr><th>ID</th><th>Check</th><th>Severity</th><th>What / how</th></tr></thead><tbody>${rows.map(c=>`<tr class="row" data-id="${esc(c.id)}"><td class="mono">${esc(c.id)}</td><td>${esc(c.title)}<div>${c.tags.map(t=>`<span class="pill" data-t="${esc(t)}">${esc(t)}</span>`).join("")}</div></td><td class="sev-${esc(c.severity)}">${esc(c.severity)}</td><td>${esc(c.target)} · ${esc(c.method)} · <span class="mono">${esc(c.tool)}</span> ${c.automated==="yes"?'<span class="tag open">auto</span>':'<span class="tag other">manual</span>'}</td></tr>`).join("")}</tbody></table></div><div id="cd" style="color:var(--mut)">Select a check to read why it matters, how to test it, what passes, how to fix it and how to roll back.</div></div>`;
+ $("#kq").oninput=e=>{state.kq=e.target.value;checks();$("#kq").focus();$("#kq").setSelectionRange(99,99)};
+ if($("#kclr"))$("#kclr").onclick=()=>{state.kq=state.kt=state.kp="";checks()};
+ $("#app").onclick=e=>{const pi=e.target.closest(".pill");if(pi){state.kt=state.kt===pi.dataset.t?"":pi.dataset.t;checks();return}
+  const r=e.target.closest("tr.row");if(!r)return;
+  if(r.dataset.p){state.kp=state.kp===r.dataset.p?"":r.dataset.p;checks();return}
+  const c=C.find(x=>x.id===r.dataset.id);$("#cd").style.color="";$("#cd").innerHTML=`<div class="tag">${esc(c.pillar)}</div> <span class="tag sev-${esc(c.severity)}">${esc(c.severity)}</span> ${c.tags.map(t=>`<span class="pill">${esc(t)}</span>`).join("")}<div style="margin:6px 0" class="mono">Standards: ${esc(c.standards.join(", "))} · Sources: ${esc(c.sources.join(", "))}</div><div class="scroll" style="padding:4px 12px;border:1px solid var(--line);background:var(--panel)">${md(c.body)}</div>`}}
+function scan(){
+ $("#app").innerHTML=`<h2>Check a website</h2><div class="note"><b>Only test sites you own or are allowed to test.</b> The checker makes a handful of ordinary requests (one HTTPS page, one HTTP page, a few TLS handshakes, one DNS lookup, two requests with a test Origin header). It never probes paths, ports or logins. Private and local addresses are refused. Nothing leaves this Mac except those requests to the site you name.</div>
+ <div class="bar"><input id="host" placeholder="example.com" style="min-width:300px"><label><input type="checkbox" id="ok"> I own this site or have permission to test it</label><button class="btn pri" id="go">Run checks</button></div><div id="res"></div>`;
+ $("#go").onclick=async()=>{const r=$("#res");r.textContent="Checking… (up to about 30 seconds)";try{const j=await post("/api/check",{host:$("#host").value,consent:$("#ok").checked});
+  const n=s=>j.results.filter(x=>x.status===s).length;if(!KB)KB=await api("/api/kb");const T=Object.fromEntries(KB.checks.map(c=>[c.id,c.title]));
+  r.innerHTML=`<div class="cards"><div class="card"><div class="n PASS">${n("PASS")}</div><div class="l">pass</div></div><div class="card"><div class="n WARN">${n("WARN")}</div><div class="l">warn</div></div><div class="card"><div class="n FAIL">${n("FAIL")}</div><div class="l">fail</div></div><div class="card"><div class="n MANUAL">${n("MANUAL")}</div><div class="l">manual</div></div></div><table><thead><tr><th>Result</th><th>Check</th><th>What was found</th></tr></thead><tbody>${j.results.map(x=>`<tr><td class="${x.status}"><b>${x.status}</b></td><td><span class="mono">${esc(x.id)}</span> ${esc(T[x.id]||"")}</td><td class="mono">${esc(x.detail)}</td></tr>`).join("")}</tbody></table><p style="color:var(--mut)">Checked ${esc(j.site)} at ${esc(j.checked)}. For the fix and rollback of any item, open it under Security checks.</p>`}catch(e){r.innerHTML=`<div class="note">${esc(e.message)}</div>`}}}
 load().catch(e=>$("#app").textContent="Error: "+e.message);
 </script></body></html>
