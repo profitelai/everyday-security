@@ -12,7 +12,7 @@ PORT = int(os.environ.get("PORT", "5090"))
 WS, BK, IMP = (os.path.join(HERE, d) for d in ("workspace", "backups", "imports"))
 TOKEN = secrets.token_urlsafe(24)
 SCAN = [p for p in os.environ.get("WORKBENCH_SCAN", "").split(":") if p] + [IMP, WS]   # folders to inventory (colon-separated), set WORKBENCH_SCAN
-EDITABLE = [WS]   # only the workspace is ever writable
+EDITABLE = [WS] + [p for p in os.environ.get("WORKBENCH_EDITABLE", "").split(":") if p]   # only the workspace is ever writable
 UPSTREAM_SEC = os.environ.get("WORKBENCH_BASELINE", "")   # folder holding the original as provided; copies named like it are compared to it
 SKIP = {".git", "node_modules", "__pycache__", ".DS_Store"}
 TEXT = {".md", ".py", ".json", ".sh", ".toml", ".yml", ".yaml", ".txt", ".html", ".js", ".mjs", ".css", ".svg", ".canvas", ".base", ".csv", ".cfg", ".ini"}
@@ -21,7 +21,7 @@ PAT = re.compile(os.environ.get("WORKBENCH_EXTRA_PATTERN", "(?!x)x") + r"|Copyri
 def rid(p): return os.path.relpath(p, H)
 def abspath(i): return os.path.normpath(os.path.join(H, i))
 def is_text(p): return os.path.splitext(p)[1].lower() in TEXT
-def looks_like_brain(d): return any(os.path.exists(os.path.join(d, m)) for m in ("wiki", "CODEX.md", "SKILL.md", ".claude-plugin", "pyproject.toml"))
+def looks_like_brain(d): return any(os.path.exists(os.path.join(d, m)) for m in ("wiki", "kb", "CODEX.md", "SKILL.md", ".claude-plugin", "pyproject.toml"))
 
 def discover():
     found = {}
@@ -35,6 +35,8 @@ def discover():
             elif depth < 2: walk(p, depth + 1)
     for r in SCAN:
         if os.path.isdir(r): walk(r, 0)
+    for r in [p for p in os.environ.get("WORKBENCH_BRAINS", "").split(":") if p]:   # explicit brain folders
+        if os.path.isdir(r): found[rid(r)] = r
     return found
 
 def files_of(root):
@@ -85,6 +87,7 @@ def lic_class(lic):
 
 def pillars(root):
     w = os.path.join(root, "wiki"); out = {}
+    if not os.path.isdir(w): w = os.path.join(root, "kb")
     if not os.path.isdir(w): return out
     for dp, dn, fn in os.walk(w):
         dn[:] = [d for d in dn if d not in SKIP and not d.startswith(".")]
@@ -144,7 +147,7 @@ def info(i, refresh=False):
     if i in CACHE and not refresh: return CACHE[i]
     root = abspath(i); ver, lic, auth = meta(root); fl = files_of(root)
     b = baseline_of(i)
-    d = {"id": i, "name": os.path.basename(root), "path": root, "kind": "vault brain" if os.path.isdir(os.path.join(root, "wiki")) else "skill / plugin",
+    d = {"id": i, "name": os.path.basename(root), "path": root, "kind": "vault brain" if (os.path.isdir(os.path.join(root, "wiki")) or os.path.isdir(os.path.join(root, "kb"))) else "skill / plugin",
          "version": ver, "license": lic, "license_class": lic_class(lic), "author": auth, "files": len(fl), "notes": sum(1 for f in fl if f.endswith(".md")),
          "pillars": pillars(root), "copyright_hits": len(hits_of(root)), "editable": any(root == e or root.startswith(e + os.sep) for e in EDITABLE),
          "baseline": rid(b) if b else None, "is_baseline": bool(UPSTREAM_SEC) and i == rid(UPSTREAM_SEC)}
