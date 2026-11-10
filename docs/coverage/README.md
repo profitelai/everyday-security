@@ -121,6 +121,7 @@ Every result is `PASS`, `WARN`, `FAIL`, `INCONCLUSIVE` (not enough evidence) or 
 - [How the engine works](../ARCHITECTURE.md)
 - [Where the content comes from](../PROVENANCE.md)
 - [Review queue: what is still unverified](../REVIEW-QUEUE.md)
+- [Automation roadmap: why not every check runs by itself](../AUTOMATION-ROADMAP.md)
 - [Back to the project README](../../README.md)
 
 ## Disclaimer

@@ -129,7 +129,7 @@ def build(root=ROOT, out=None):
           "## Maturity", "", "| Level | Meaning | |", "|---|---|---|", "| **Alpha (now)** | Fixture-tested logic; drafts; own systems only | current |", "| Beta | Benchmarked against known-good and known-bad systems, evidence in every finding | planned |",
           "| 1.0 | Independently reviewed and validated | planned |", "",
           "Every result is `PASS`, `WARN`, `FAIL`, `INCONCLUSIVE` (not enough evidence) or `MANUAL` (needs a person), and can carry recorded evidence and a confidence level.", "",
-          "## More", "", "- [All checks, one table](../../kb/INDEX.md)", "- [How the engine works](../ARCHITECTURE.md)", "- [Where the content comes from](../PROVENANCE.md)", "- [Review queue: what is still unverified](../REVIEW-QUEUE.md)", "- [Back to the project README](../../README.md)", "",
+          "## More", "", "- [All checks, one table](../../kb/INDEX.md)", "- [How the engine works](../ARCHITECTURE.md)", "- [Where the content comes from](../PROVENANCE.md)", "- [Review queue: what is still unverified](../REVIEW-QUEUE.md)", "- [Automation roadmap: why not every check runs by itself](../AUTOMATION-ROADMAP.md)", "- [Back to the project README](../../README.md)", "",
           "## Disclaimer", "", "Provided for information only, as is, without warranty. Not legal, privacy, compliance or professional security advice. See the Disclaimer in the project README.", ""]
     open(os.path.join(out, "README.md"), "w", encoding="utf-8").write("\n".join(L))
     for p in P:
