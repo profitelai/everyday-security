@@ -2,7 +2,7 @@ import re
 from . import group
 from ..context import fetch
 
-IDS = tuple("HDR-%03d" % n for n in range(1, 11))
+IDS = tuple("HDR-%03d" % n for n in range(1, 11) if n != 8)   # HDR-008 lives in runners/outside.py
 
 @group("headers", *IDS)
 def headers(ctx):
@@ -32,7 +32,6 @@ def headers(ctx):
             lack = [f for f, k in (("Secure", "secure"), ("HttpOnly", "httponly"), ("SameSite", "samesite")) if k not in c.lower()]
             if lack: miss.append(f"{c.split('=')[0]}: missing {'/'.join(lack)}")
         out.append(("HDR-007", "FAIL" if miss else "PASS", "; ".join(miss) if miss else f"{len(cookies)} cookie(s), all with Secure/HttpOnly/SameSite"))
-    out.append(("HDR-008", "MANUAL", f"home page Cache-Control: {h.get('cache-control','none')}; private pages must be tested while signed in"))
     leak = [f"{k}: {v}" for k, v in h.items() if k in ("server", "x-powered-by", "x-aspnet-version", "x-generator") and re.search(r"\d+\.\d+", v)]
     out.append(("HDR-009", "WARN" if leak else "PASS", "; ".join(leak) if leak else "no version numbers in banner headers"))
     probs = []

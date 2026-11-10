@@ -99,4 +99,24 @@ class Reports(unittest.TestCase):
         run = {"version": "v", "pack_hash": "h", "rules_loaded": 0, "started": "2026-01-01T00:00:00", "deep": False, "sites": [{"host": "<script>x</script>.com", "name": "<b>n</b>", "tags": [], "score": 50, "grade": "F", "tally": {"FAIL": 1}, "rules": {}, "seconds": 1, "results": [{"id": "A-1", "status": "FAIL", "detail": "<img src=x onerror=1>", "severity": "high", "title": "t", "pillar": "p", "tags": []}]}]}
         h = report.to_html(run, "r1"); self.assertNotIn("<script>x", h); self.assertNotIn("<img src=x", h); self.assertIn("&lt;img", h)
 
+class OutsideHelpers(unittest.TestCase):
+    K1024 = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDZoVHlcjm53C9TiE4UaMuhyaQ1JuLfkqJ+cENc/94gFjFfpqNNUipddpwENmFWwZtBUDQDnMQgOEMzyPGWf8irj7ITQH8Pi8p77TYH5yJcfBJol0p23RtCDIhyNH7VMzNZ4zir+I2CIvar2F+wtR1Y3/qK4NOwTDhcejmylB1RQIDAQAB"
+    K2048 = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuG+iRnUwXy6LUlj3NQC8KfE0QQ1ekCSCzKfrfqrkCrcLrN9CDPWfo/YrIFtJVLiohMAFUs7VGfIQk+K0ovSaHqyHB4Cu1HfE0YaBso5elNHW27dGmwn7ypyCoLg96i3fIjYjFkrW8YH9RsacWcdqOdz32whg5A6DGtnDJjxzLgVMPqKhmK40BElBbCbCyVw5Gu0p5cTBWvQ1dZmSr+sdRFJGAJCqLRSutyAc8beMdfIMRyOjUFfTi3Aigzcfoj+WC4nq/e/6anAne0pfy0PaxWxnhGx03zGWvALvZjfNMx+NDkkm7btC3tFs7HIed+uXZ22eDBhAiklhcqscuSyuRQIDAQAB"
+    def test_dkim_sizes(self):
+        from everyday.runners.outside import dkim_key_bits
+        self.assertEqual(dkim_key_bits("v=DKIM1; k=rsa; p=" + self.K1024), 1024)
+        self.assertEqual(dkim_key_bits("v=DKIM1; p=" + self.K2048), 2048)
+        self.assertEqual(dkim_key_bits("v=DKIM1; p="), 0)          # revoked
+        self.assertEqual(dkim_key_bits("v=DKIM1; k=ed25519; p=abcd"), 256)
+        self.assertIsNone(dkim_key_bits("not a record"))
+    def test_private_addresses(self):
+        from everyday.runners.outside import is_private
+        for a in ("10.0.0.5", "192.168.1.9", "172.16.4.4", "127.0.0.1", "169.254.1.1", "fd00::1"): self.assertTrue(is_private(a), a)
+        for a in ("8.8.8.8", "1.1.1.1", "2606:4700::1", "not-an-ip"): self.assertFalse(is_private(a), a)
+    def test_dmarc_policy(self):
+        from everyday.runners.outside import dmarc_policy
+        self.assertEqual(dmarc_policy("v=DMARC1; p=reject; pct=50"), ("reject", 50))
+        self.assertEqual(dmarc_policy("v=DMARC1; p=none"), ("none", 100))
+        self.assertEqual(dmarc_policy("v=DMARC1"), (None, 100))
+
 if __name__ == "__main__": unittest.main()

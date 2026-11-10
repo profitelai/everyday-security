@@ -28,7 +28,7 @@
 | [DNS-006](dns/DNS-006.md) | Zone transfers (AXFR) are refused to the public | medium | domain | dns-lookup | `dig` | yes | `dns` `axfr` `zone-transfer` `information-disclosure` |
 | [DNS-007](dns/DNS-007.md) | No CNAME or delegation points at a deprovisioned service (subdomain takeover review) | high | domain | dns-lookup | `dig` | manual | `dns` `subdomain-takeover` `cname` `dangling-records` |
 | [DNS-008](dns/DNS-008.md) | No A or AAAA record points at an IP address you have released | medium | domain | manual-review | `dig` | manual | `dns` `a-records` `stale-records` `cloud-ip` |
-| [DNS-009](dns/DNS-009.md) | Public DNS does not expose internal hostnames or private addresses | low | domain | dns-lookup | `dig` | manual | `dns` `information-disclosure` `split-horizon` `internal-hosts` |
+| [DNS-009](dns/DNS-009.md) | Public DNS does not expose internal hostnames or private addresses | low | domain | dns-lookup | `dig` | yes | `dns` `information-disclosure` `split-horizon` `internal-hosts` |
 
 ## http-headers
 
@@ -41,7 +41,7 @@
 | [HDR-005](http-headers/HDR-005.md) | Referrer-Policy limits what URLs leak to other sites | low | website | http-request | `curl` | yes | `headers` `privacy` `referrer` `web` |
 | [HDR-006](http-headers/HDR-006.md) | Permissions-Policy switches off browser features the site does not use | low | website | http-request | `curl` | yes | `headers` `privacy` `browser-features` `web` |
 | [HDR-007](http-headers/HDR-007.md) | Session and authentication cookies carry Secure, HttpOnly and SameSite | high | website | http-request | `curl` | yes | `headers` `cookies` `session` `web` |
-| [HDR-008](http-headers/HDR-008.md) | Responses with private data are not cached by browsers or shared caches | medium | website | http-request | `curl` | manual | `headers` `caching` `privacy` `web` |
+| [HDR-008](http-headers/HDR-008.md) | Responses with private data are not cached by browsers or shared caches | medium | website | http-request | `curl` | yes | `headers` `caching` `privacy` `web` |
 | [HDR-009](http-headers/HDR-009.md) | Server and framework version banners are not exposed | low | website | http-request | `curl` | yes | `headers` `information-disclosure` `web` |
 | [HDR-010](http-headers/HDR-010.md) | CORS allows only named origins and never combines a wildcard with credentials | high | website | http-request | `curl` | yes | `headers` `cors` `api` `web` |
 
@@ -50,14 +50,14 @@
 | ID | Check | Severity | Target | Method | Tool | Auto | Tags |
 |---|---|---|---|---|---|---|---|
 | [MAIL-001](mail-authentication/MAIL-001.md) | SPF is published once, stays within 10 DNS lookups and ends in -all or ~all | high | domain | dns-lookup | `dig` | yes | `email` `spf` `dns` `spoofing` `domain` |
-| [MAIL-002](mail-authentication/MAIL-002.md) | Outgoing mail is DKIM-signed with a 2048-bit key published in DNS | high | domain | dns-lookup | `dig` | manual | `email` `dkim` `dns` `cryptography` `domain` |
+| [MAIL-002](mail-authentication/MAIL-002.md) | Outgoing mail is DKIM-signed with a 2048-bit key published in DNS | high | domain | dns-lookup | `dig` | yes | `email` `dkim` `dns` `cryptography` `domain` |
 | [MAIL-003](mail-authentication/MAIL-003.md) | A single DMARC record exists with a valid policy and an aggregate-report address | high | domain | dns-lookup | `dig` | yes | `email` `dmarc` `dns` `reporting` `domain` |
-| [MAIL-004](mail-authentication/MAIL-004.md) | DMARC policy is moved from none to quarantine to reject, guided by reports | high | domain | dns-lookup | `dig` | manual | `email` `dmarc` `enforcement` `spoofing` `domain` |
-| [MAIL-005](mail-authentication/MAIL-005.md) | Domains that never send or receive mail publish a deny-all SPF, a reject DMARC and a null MX | medium | domain | dns-lookup | `dig` | manual | `email` `parked-domains` `spf` `dmarc` `null-mx` |
+| [MAIL-004](mail-authentication/MAIL-004.md) | DMARC policy is moved from none to quarantine to reject, guided by reports | high | domain | dns-lookup | `dig` | yes | `email` `dmarc` `enforcement` `spoofing` `domain` |
+| [MAIL-005](mail-authentication/MAIL-005.md) | Domains that never send or receive mail publish a deny-all SPF, a reject DMARC and a null MX | medium | domain | dns-lookup | `dig` | yes | `email` `parked-domains` `spf` `dmarc` `null-mx` |
 | [MAIL-006](mail-authentication/MAIL-006.md) | MTA-STS is enforced and TLS-RPT reporting is enabled for incoming mail | medium | domain | dns-lookup | `dig` | yes | `email` `mta-sts` `tls-rpt` `smtp` `transport` |
-| [MAIL-007](mail-authentication/MAIL-007.md) | Every MX host offers STARTTLS with a valid certificate and TLS 1.2 or newer | medium | mail | tls-handshake | `openssl` | manual | `email` `starttls` `tls` `certificates` `smtp` |
+| [MAIL-007](mail-authentication/MAIL-007.md) | Every MX host offers STARTTLS with a valid certificate and TLS 1.2 or newer | medium | mail | tls-handshake | `openssl` | yes | `email` `starttls` `tls` `certificates` `smtp` |
 | [MAIL-008](mail-authentication/MAIL-008.md) | The mail server is not an open relay | critical | mail | server-config | `swaks` | manual | `email` `open-relay` `smtp` `abuse` `server` |
-| [MAIL-009](mail-authentication/MAIL-009.md) | Each outgoing mail IP has a reverse DNS name that resolves back to the same IP | medium | mail | dns-lookup | `dig` | manual | `email` `reverse-dns` `ptr` `deliverability` `server` |
+| [MAIL-009](mail-authentication/MAIL-009.md) | Each outgoing mail IP has a reverse DNS name that resolves back to the same IP | medium | mail | dns-lookup | `dig` | yes | `email` `reverse-dns` `ptr` `deliverability` `server` |
 | [MAIL-010](mail-authentication/MAIL-010.md) | Mailbox accounts use multi-factor authentication and strong, unique passwords | high | process | manual-review | `nmap` | manual | `email` `mfa` `passwords` `accounts` `process` |
 
 ## privacy-compliance
@@ -98,7 +98,7 @@
 |---|---|---|---|---|---|---|---|
 | [TLS-001](tls/TLS-001.md) | Only TLS 1.2 and TLS 1.3 are accepted | high | website | tls-handshake | `openssl` | yes | `tls` `encryption` `protocol-versions` `web` `server` |
 | [TLS-002](tls/TLS-002.md) | Certificate is valid, complete, matches the name, and is not close to expiry | high | website | tls-handshake | `openssl` | yes | `tls` `certificate` `expiry` `web` `server` |
-| [TLS-003](tls/TLS-003.md) | Cipher suites are modern and give forward secrecy | medium | website | tls-handshake | `nmap` | manual | `tls` `ciphers` `forward-secrecy` `server` |
+| [TLS-003](tls/TLS-003.md) | Cipher suites are modern and give forward secrecy | medium | website | tls-handshake | `nmap` | yes | `tls` `ciphers` `forward-secrecy` `server` |
 | [TLS-004](tls/TLS-004.md) | Plain HTTP redirects to HTTPS, with no mixed content | high | website | http-request | `curl` | yes | `tls` `redirect` `mixed-content` `web` |
 | [TLS-005](tls/TLS-005.md) | DNS CAA records restrict which authorities may issue certificates | low | domain | dns-lookup | `dig` | yes | `tls` `dns` `caa` `certificate` |
 | [TLS-006](tls/TLS-006.md) | Certificate renewal is automatic and monitored | high | server | server-config | `certbot` | manual | `tls` `certificate` `renewal` `acme` `server` |

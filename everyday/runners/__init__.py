@@ -2,14 +2,17 @@
 Add a new automated check by writing a function with @group("name", "CHECK-ID", ...) in any module in this folder."""
 import importlib, pkgutil
 GROUPS = []   # (name, tuple(ids), fn)
+_LOADED = False
 
 def group(name, *ids):
     def deco(fn): GROUPS.append((name, tuple(ids), fn)); return fn
     return deco
 
 def load_all():
-    if GROUPS: return GROUPS
-    for m in pkgutil.iter_modules(__path__): importlib.import_module(f"{__name__}.{m.name}")
+    global _LOADED
+    if not _LOADED:
+        for m in pkgutil.iter_modules(__path__): importlib.import_module(f"{__name__}.{m.name}")
+        _LOADED = True
     return GROUPS
 
 def provided_ids():

@@ -9,7 +9,7 @@ tags: [email, dmarc, enforcement, spoofing, domain]
 target: domain
 method: dns-lookup
 tool: dig
-automated: no
+automated: yes
 status: draft
 reviewed: 2026-11-09
 author: Profitell Security Consulting

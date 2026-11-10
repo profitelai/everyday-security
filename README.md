@@ -14,22 +14,22 @@ By [Profitell Security Consulting](https://www.profitell.com/) · [profitell.com
 |---|---:|
 | Pillars | **8** |
 | Security checks | **78** |
-| Run automatically by the site checker | **19** |
-| Manual (server access, sign-in or human review) | **59** |
+| Run automatically by the site checker | **27** |
+| Manual (server access, sign-in or human review) | **51** |
 | Tags | **196** |
 | Public sources cited | **153** |
 
 | Pillar | Checks | Critical | High | Medium | Low | Automated |
 |---|---:|---:|---:|---:|---:|---:|
 | [`backups-and-recovery`](kb/backups-and-recovery/) | 9 |  | 7 | 2 |  | 0/9 |
-| [`dns`](kb/dns/) | 9 |  | 4 | 4 | 1 | 3/9 |
-| [`http-headers`](kb/http-headers/) | 10 |  | 4 | 3 | 3 | 9/10 |
-| [`mail-authentication`](kb/mail-authentication/) | 10 | 1 | 5 | 4 |  | 3/10 |
+| [`dns`](kb/dns/) | 9 |  | 4 | 4 | 1 | 4/9 |
+| [`http-headers`](kb/http-headers/) | 10 |  | 4 | 3 | 3 | 10/10 |
+| [`mail-authentication`](kb/mail-authentication/) | 10 | 1 | 5 | 4 |  | 8/10 |
 | [`privacy-compliance`](kb/privacy-compliance/) | 10 |  | 7 | 3 |  | 0/10 |
 | [`server-hardening`](kb/server-hardening/) | 12 |  | 7 | 5 |  | 0/12 |
-| [`tls`](kb/tls/) | 6 |  | 4 | 1 | 1 | 4/6 |
+| [`tls`](kb/tls/) | 6 |  | 4 | 1 | 1 | 5/6 |
 | [`web-app`](kb/web-app/) | 12 | 1 | 7 | 4 |  | 0/12 |
-| **Total** | **78** | **2** | **45** | **26** | **5** | **19/78** |
+| **Total** | **78** | **2** | **45** | **26** | **5** | **27/78** |
 <!-- COUNTS:END -->
 
 Full list with tags, tools and severity: [`kb/INDEX.md`](kb/INDEX.md). The counts above are generated from the files in `kb/` by `tools/kb/build_index.py`, so they always match the content.

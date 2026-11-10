@@ -9,7 +9,7 @@ tags: [email, reverse-dns, ptr, deliverability, server]
 target: mail
 method: dns-lookup
 tool: dig
-automated: no
+automated: yes
 status: draft
 reviewed: 2026-11-09
 author: Profitell Security Consulting

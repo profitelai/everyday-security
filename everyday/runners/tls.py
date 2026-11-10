@@ -2,7 +2,7 @@ import datetime as dt, socket, ssl
 from . import group
 from ..context import tls_try, fetch
 
-@group("tls", "TLS-001", "TLS-002", "TLS-003", "TLS-004", "TLS-005", "TLS-006")
+@group("tls", "TLS-001", "TLS-002", "TLS-004", "TLS-005", "TLS-006")
 def tls(ctx):
     host, out = ctx.host, []
     v12, v13 = tls_try(host, ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_2), tls_try(host, ssl.TLSVersion.TLSv1_3, ssl.TLSVersion.TLSv1_3)
@@ -21,7 +21,6 @@ def tls(ctx):
         out.append(("TLS-002", "FAIL" if left < 7 else "WARN" if left < 30 else "PASS", f"chain and name verified; {left} days left; issuer {dict(x[0] for x in cert['issuer']).get('organizationName','?')}; names: {', '.join(names[:4])}"))
     except ssl.SSLCertVerificationError as e: out.append(("TLS-002", "FAIL", "certificate does not verify: " + (e.verify_message or str(e))))
     except OSError as e: out.append(("TLS-002", "FAIL", "cannot open an HTTPS connection: " + str(e)))
-    out.append(("TLS-003", "MANUAL", (f"negotiated {cipher[0]}; " if cipher else "") + "full suite list needs: nmap --script ssl-enum-ciphers"))
     try:
         r = fetch(host, 80, timeout=ctx.timeout); st, loc = r["status"], r["headers"].get("location", "")
         if st in (301, 308) and loc.lower().startswith("https://"): out.append(("TLS-004", "PASS", f"HTTP {st} to {loc}"))

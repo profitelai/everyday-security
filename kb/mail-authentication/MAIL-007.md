@@ -9,7 +9,7 @@ tags: [email, starttls, tls, certificates, smtp]
 target: mail
 method: tls-handshake
 tool: openssl
-automated: no
+automated: yes
 status: draft
 reviewed: 2026-11-09
 author: Profitell Security Consulting
