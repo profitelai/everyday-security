@@ -21,6 +21,7 @@ def fetch(host, port=443, path="/", headers=None, timeout=10, limit=65536):
     finally: c.close()
 
 def tls_try(host, lo, hi, timeout=10):
+    # Verification is off on purpose: a scanner must still read what a broken or expired site presents. Only public data is requested; nothing secret is sent.
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT); ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE
     try: ctx.minimum_version, ctx.maximum_version = lo, hi
     except (ValueError, ssl.SSLError): return "unavailable"

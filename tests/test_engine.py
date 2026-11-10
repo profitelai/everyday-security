@@ -3,6 +3,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from everyday import ingest, registry, report, rules, store
 from everyday.model import score, tally
 
+def _jl(path):
+    with open(path) as fh: return json.load(fh)
+
 class FakeCtx:
     def __init__(self, headers=None, host="127.0.0.1", port=None, deep=True):
         self.host = host; self.apex = host; self.deep = deep; self.timeout = 3; self.has_dig = False; self.subdomains = []; self._h = headers or {}; self.port = port
@@ -78,11 +81,11 @@ class Ingest(unittest.TestCase):
         self.assertEqual((res["added"], res["duplicates"], res["invalid"]), (1, 1, 1))
         again = ingest.ingest_rules("path_probe", [rows[0]], "https://example.com", "own", "tester", root=self.d, stamp="t2"); self.assertEqual((again["added"], again["duplicates"]), (0, 1))
         dst, n = ingest.approve(res["file"], "reviewer", root=self.d); self.assertEqual(n, 1); self.assertFalse(os.path.exists(res["file"]))
-        r = json.load(open(dst))["rules"][0]; self.assertEqual((r["status"], r["reviewed_by"], r["id"]), ("approved", "reviewer", "PRB-0001"))
+        r = _jl(dst)["rules"][0]; self.assertEqual((r["status"], r["reviewed_by"], r["id"]), ("approved", "reviewer", "PRB-0001"))
     def test_ids_continue(self):
         ingest.ingest_rules("takeover", [{"cname_suffix": "a.example", "fingerprint": "x"}], "https://example.com", "own", "t", root=self.d, stamp="a")
         r = ingest.ingest_rules("takeover", [{"cname_suffix": "b.example", "fingerprint": "y"}], "https://example.com", "own", "t", root=self.d, stamp="b")
-        self.assertEqual(json.load(open(r["file"]))["rules"][0]["id"], "TKO-0002")
+        self.assertEqual(_jl(r["file"])["rules"][0]["id"], "TKO-0002")
     def test_check_ingest_requires_known_sources(self):
         row = dict(id="ABC-001", pillar="demo", title="T", severity="low", sources="S-NOPE", tags="a|b", target="website", method="manual-review", tool="browser", why="w", test="t", **{"pass": "p"}, fix="f", risk="r")
         self.assertEqual(ingest.ingest_checks([row], root=self.d)["invalid"], 1)
@@ -100,6 +103,7 @@ class Reports(unittest.TestCase):
         h = report.to_html(run, "r1"); self.assertNotIn("<script>x", h); self.assertNotIn("<img src=x", h); self.assertIn("&lt;img", h)
 
 class OutsideHelpers(unittest.TestCase):
+    # Public RSA keys used only as fixtures for the DKIM key-size check (no private key exists for them).
     K1024 = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDZoVHlcjm53C9TiE4UaMuhyaQ1JuLfkqJ+cENc/94gFjFfpqNNUipddpwENmFWwZtBUDQDnMQgOEMzyPGWf8irj7ITQH8Pi8p77TYH5yJcfBJol0p23RtCDIhyNH7VMzNZ4zir+I2CIvar2F+wtR1Y3/qK4NOwTDhcejmylB1RQIDAQAB"
     K2048 = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuG+iRnUwXy6LUlj3NQC8KfE0QQ1ekCSCzKfrfqrkCrcLrN9CDPWfo/YrIFtJVLiohMAFUs7VGfIQk+K0ovSaHqyHB4Cu1HfE0YaBso5elNHW27dGmwn7ypyCoLg96i3fIjYjFkrW8YH9RsacWcdqOdz32whg5A6DGtnDJjxzLgVMPqKhmK40BElBbCbCyVw5Gu0p5cTBWvQ1dZmSr+sdRFJGAJCqLRSutyAc8beMdfIMRyOjUFfTi3Aigzcfoj+WC4nq/e/6anAne0pfy0PaxWxnhGx03zGWvALvZjfNMx+NDkkm7btC3tFs7HIed+uXZ22eDBhAiklhcqscuSyuRQIDAQAB"
     def test_dkim_sizes(self):

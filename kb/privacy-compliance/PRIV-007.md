@@ -11,11 +11,13 @@ method: manual-review
 tool: policy-review
 automated: no
 status: draft
-reviewed: 2026-11-09
+drafted: 2026-11-09
 author: Profitell Security Consulting
 ---
 
 # PRIV-007 · A tested procedure decides when to notify the Commission and affected people, and staff know how to report
+
+> Informational only, not legal advice. Laws, dates and time limits change; confirm the current text of the cited source or ask a qualified professional before relying on this check.
 
 ## Why it matters
 When a confidentiality incident is suspected, the Quebec Act (s. 3.5) requires reasonable steps to reduce the risk of injury and prevent a repeat. If the incident presents a risk of serious injury, the Commission d'acces a l'information and the people concerned must be notified promptly; the Commission can order notice to individuals if you do not. The risk assessment must weigh the sensitivity of the information, the expected consequences of its use and how likely misuse is, and must involve the person in charge (s. 3.7). The regulation sets what each notice must contain (Reg. ss. 3 to 6). Other regimes use different tests: PIPEDA s. 10.1 speaks of a real risk of significant harm; GDPR Art. 33 sets a 72-hour clock to the authority unless risk is unlikely. Failing to report is among the breaches the Commission can penalize. This is operational guidance, not legal advice; confirm obligations for your situation with a qualified lawyer.

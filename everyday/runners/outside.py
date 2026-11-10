@@ -1,6 +1,6 @@
 """More checks that can be judged from outside the server: mail-DNS depth, MX transport security, reverse DNS,
 private addresses in public DNS, caching of personal responses and TLS cipher posture."""
-import base64, ipaddress, re, smtplib, socket, ssl
+import base64, datetime as dt, ipaddress, re, smtplib, socket, ssl, time
 from . import group
 
 # ---------- pure helpers (unit-tested) ----------
@@ -87,30 +87,97 @@ def mail_depth(ctx):
     out.append(("MAIL-009", "MANUAL" if not mx else ("WARN" if bad else "PASS"), "no MX hosts" if not mx else ("; ".join(bad) if bad else f"reverse DNS matches for the {len(mx[:4])} MX host(s). Your outgoing IPs need the same check (see the test steps)")))
     return out
 
+def name_matches(host, names):
+    """True if `host` equals a certificate DNS name or matches a single-label wildcard such as *.example.com."""
+    h = host.rstrip(".").lower()
+    for n in names:
+        n = n.rstrip(".").lower()
+        if n == h or (n.startswith("*.") and "." in h and h.split(".", 1)[1] == n[2:]): return True
+    return False
+
+def cert_names(cert):
+    """DNS names a certificate is valid for: the subjectAltName DNS entries, or the common name only when there are none."""
+    san = [v for k, v in cert.get("subjectAltName", ()) if k == "DNS"]
+    if san: return san
+    return [v for rdn in cert.get("subject", ()) for k, v in rdn if k == "commonName"]
+
+def _dn(cert, field):
+    return ", ".join(v for rdn in cert.get(field, ()) for k, v in rdn if k in ("commonName", "organizationName"))
+
+def probe_mx(host, timeout=8):
+    """One SMTP connection to an MX host on port 25. Records what happened; judges nothing."""
+    ob = {"host": host, "port": 25, "reachable": False}
+    try: s = smtplib.SMTP(host, 25, timeout=timeout)
+    except (OSError, smtplib.SMTPException) as e: ob["error"] = type(e).__name__; return ob
+    ob["reachable"] = True
+    try:
+        s.ehlo(); ob["starttls"] = s.has_extn("starttls")
+        if not ob["starttls"]: return ob
+        c = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT); c.check_hostname = False; c.verify_mode = ssl.CERT_REQUIRED; c.load_default_certs()   # chain checked here, name checked below so the two stay separate
+        try: s.starttls(context=c)
+        except ssl.SSLCertVerificationError as e: ob["chain"] = "untrusted"; ob["chain_error"] = e.verify_message; ob["verify_code"] = e.verify_code; return ob
+        except ssl.SSLError as e: ob["chain"] = "error"; ob["error"] = type(e).__name__; return ob
+        ob["chain"] = "trusted"; ob["tls_version"] = s.sock.version(); cert = s.sock.getpeercert()
+        ob["names"] = cert_names(cert); ob["name_matches"] = name_matches(host, ob["names"]); ob["issuer"] = _dn(cert, "issuer"); ob["not_after"] = cert.get("notAfter")
+        if cert.get("notAfter"): ob["days_left"] = int((ssl.cert_time_to_seconds(cert["notAfter"]) - time.time()) // 86400)
+    except (OSError, smtplib.SMTPException) as e: ob["error"] = type(e).__name__
+    finally:
+        try: s.close()
+        except Exception: pass
+    return ob
+
+def _mta_sts_mode(ctx):
+    """'enforce', 'testing', 'none' or None, from the MTA-STS policy file (RFC 8461); None when there is no policy."""
+    import http.client
+    try:
+        c = http.client.HTTPSConnection("mta-sts." + ctx.apex, timeout=8); c.request("GET", "/.well-known/mta-sts.txt", headers={"User-Agent": "EverydaySecurity"}); r = c.getresponse(); body = r.read(4096).decode("utf-8", "ignore")
+        m = re.search(r"(?mi)^mode:\s*(\w+)", body) if r.status == 200 else None
+        return m.group(1).lower() if m else None
+    except (OSError, ValueError): return None
+
+def judge_mx_tls(obs, policy):
+    """Decide MAIL-007 from recorded observations. Returns (status, detail, extra) where extra holds the evidence and a confidence.
+    Three separate questions per mail host: is the certificate chain trusted, does the name match the host contacted, is it near expiry.
+    A name mismatch is a WARN, and a FAIL only when MTA-STS 'enforce' or DANE is published, because then senders will refuse the mail."""
+    ev = {"hosts": obs, "policy": policy, "checked": dt.datetime.utcnow().isoformat() + "Z"}
+    if not obs: return "MANUAL", "no MX hosts found", {"evidence": ev}
+    reach = [o for o in obs if o.get("reachable")]
+    if not reach: return "INCONCLUSIVE", "port 25 could not be reached from this network (many providers block outbound 25); run the check from a server", {"evidence": ev, "confidence": "low"}
+    strict = policy.get("mta_sts") == "enforce" or bool(policy.get("dane"))
+    fails, warns, unsure, good = [], [], [], []
+    for o in reach:
+        h = o["host"]
+        if o.get("error") and not o.get("starttls"): unsure.append(f"{h}: connected but the TLS test failed ({o['error']})"); continue
+        if not o.get("starttls"): fails.append(f"{h}: does not offer STARTTLS, so mail is sent in clear text"); continue
+        if o.get("chain") == "untrusted":
+            if o.get("verify_code") == 10: fails.append(f"{h}: certificate has expired")
+            else: warns.append(f"{h}: certificate chain is not trusted ({o.get('chain_error')})")
+            continue
+        if o.get("chain") == "error": unsure.append(f"{h}: TLS handshake failed ({o.get('error')})"); continue
+        parts = ["certificate chain trusted"]
+        if o.get("tls_version") in ("TLSv1", "TLSv1.1", "SSLv3"): fails.append(f"{h}: negotiated {o['tls_version']}"); continue
+        if not o.get("name_matches"):
+            msg = f"{h}: certificate name does not match this host (certificate is for {', '.join(o.get('names') or ['?'])})"
+            (fails if strict else warns).append(msg + ("; MTA-STS enforce or DANE is published, so senders that honour it will refuse delivery" if strict else "; usual with hosted mail, and only matters if MTA-STS enforce or DANE is used"))
+        else: parts.append("name matches")
+        d = o.get("days_left")
+        if d is not None and d < 14: warns.append(f"{h}: certificate expires in {d} days")
+        elif d is not None: parts.append(f"valid for {d} more days")
+        good.append(f"{h}: " + ", ".join(parts) + f", {o.get('tls_version', '?')}")
+    notes = "; ".join(fails + warns + unsure)
+    if fails: return "FAIL", notes, {"evidence": ev, "confidence": "high"}
+    if warns: return "WARN", notes + ("" if not good else " | other checks: " + "; ".join(good)), {"evidence": ev, "confidence": "medium"}
+    if unsure: return "INCONCLUSIVE", notes, {"evidence": ev, "confidence": "low"}
+    return "PASS", f"{len(reach)} MX host(s): " + "; ".join(good), {"evidence": ev, "confidence": "high"}
+
 @group("mx-tls", "MAIL-007")
 def mx_tls(ctx):
     hosts = _mx(ctx) if ctx.has_dig else []
-    if not hosts: return [("MAIL-007", "MANUAL" if ctx.has_dig else "MANUAL", "no MX hosts found or dig missing")]
-    res, soft, reachable = [], [], 0
-    for h in hosts[:4]:
-        try:
-            s = smtplib.SMTP(h, 25, timeout=8)
-        except (OSError, smtplib.SMTPException): continue
-        reachable += 1
-        try:
-            s.ehlo()
-            if not s.has_extn("starttls"): res.append(f"{h}: no STARTTLS"); continue
-            c = ssl.create_default_context()
-            try: s.starttls(context=c)
-            except ssl.SSLError as e: soft.append(f"{h}: certificate does not validate for this name (common with hosted mail, but worth confirming)"); continue
-            v = s.sock.version() if hasattr(s.sock, "version") else "?"
-            if v in ("TLSv1", "TLSv1.1", "SSLv3"): res.append(f"{h}: negotiated {v}")
-        except (OSError, smtplib.SMTPException) as e: res.append(f"{h}: {type(e).__name__}")
-        finally:
-            try: s.close()
-            except Exception: pass
-    if not reachable: return [("MAIL-007", "MANUAL", "port 25 not reachable from this network (many providers block outbound 25); run the test from a server")]
-    return [("MAIL-007", "FAIL" if res else "WARN" if soft else "PASS", "; ".join(res + soft) if res or soft else f"{reachable} MX host(s) offer STARTTLS with a valid certificate on TLS 1.2 or newer")]
+    if not hosts: return [("MAIL-007", "MANUAL", "no MX hosts found or dig missing")]
+    obs = [probe_mx(h) for h in hosts[:4]]
+    policy = {"mta_sts": _mta_sts_mode(ctx), "dane": any(ctx.dig("TLSA", f"_25._tcp.{h}") for h in hosts[:4])}
+    st, detail, extra = judge_mx_tls(obs, policy)
+    return [("MAIL-007", st, detail, extra)]
 
 COMMON_INTERNAL = ("intranet", "internal", "vpn", "dev", "staging", "test", "admin", "db", "mysql", "git", "jenkins", "ldap", "mail", "ftp", "office", "nas", "router")
 
@@ -140,7 +207,7 @@ def cache(ctx):
 def ciphers(ctx):
     host = ctx.host; res = []
     def attempt(cipher_string, label, tls12=True):
-        c = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT); c.check_hostname = False; c.verify_mode = ssl.CERT_NONE
+        c = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT); c.check_hostname = False; c.verify_mode = ssl.CERT_NONE   # on purpose: we only measure which cipher the server accepts; no data is sent
         try:
             c.set_ciphers(cipher_string); c.maximum_version = ssl.TLSVersion.TLSv1_2
         except (ssl.SSLError, ValueError): return None

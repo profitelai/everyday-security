@@ -21,7 +21,7 @@ PAT = re.compile(os.environ.get("WORKBENCH_EXTRA_PATTERN", "(?!x)x") + r"|Copyri
 def rid(p): return os.path.relpath(p, H)
 def abspath(i): return os.path.normpath(os.path.join(H, i))
 def is_text(p): return os.path.splitext(p)[1].lower() in TEXT
-def looks_like_brain(d): return any(os.path.exists(os.path.join(d, m)) for m in ("wiki", "kb", "CODEX.md", "SKILL.md", ".claude-plugin", "pyproject.toml"))
+def looks_like_brain(d): return any(os.path.exists(os.path.join(d, m)) for m in ("wiki", "kb", "SKILL.md", ".claude-plugin", "pyproject.toml"))
 
 def discover():
     found = {}

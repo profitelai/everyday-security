@@ -11,11 +11,13 @@ method: manual-review
 tool: spreadsheet
 automated: no
 status: draft
-reviewed: 2026-11-09
+drafted: 2026-11-09
 author: Profitell Security Consulting
 ---
 
 # PRIV-005 · A retention and destruction schedule exists and is actually carried out
+
+> Informational only, not legal advice. Laws, dates and time limits change; confirm the current text of the cited source or ask a qualified professional before relying on this check.
 
 ## Why it matters
 Once the purposes for which personal information was collected or used are achieved, the Quebec Act (s. 23) requires the business to destroy it or anonymize it, subject to any keeping period set by another law. Governance policies must include a framework for keeping and destroying information (s. 3.2). Information used to make a decision about a person must be kept at least one year after the decision (s. 11). The Commission recommends a written retention calendar that respects legal minimums and a destruction method suited to the medium. PIPEDA Schedule 1 (4.5.2, 4.5.3) likewise expects retention guidelines and procedures for destruction. Old data nobody needs is pure liability in an incident. This is operational guidance, not legal advice; confirm obligations for your situation with a qualified lawyer.

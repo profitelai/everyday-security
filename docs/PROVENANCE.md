@@ -5,10 +5,14 @@ Every part of this repository, where it came from, and what is still open.
 | Part | Origin | Status |
 |---|---|---|
 | `tools/workbench/` | Written by Profitell Security Consulting in November 2026. | Ours. |
-| `tools/scanner/security_review.py` | Written by Profitell Security Consulting for its own server reviews. | Ours. Its check list was first drafted while a third-party checklist was open for reference, so before 1.0 each check gets an independent written specification from public standards (OWASP, IETF RFCs, vendor documentation) and a review. |
+| `tools/scanner/security_review.py` | Written by Profitell Security Consulting for its own server reviews. | Ours. Its check list was first drafted while a third-party checklist was open for reference. On 2026-11-09 every check was re-based on a public standard (the `SPEC` table in the script cites an RFC, OWASP page, W3C document or vendor manual for each), several heuristics were corrected and severities re-derived. Before 1.0 it still needs an independent written specification and a human review. |
 | `LICENSE` | Standard unmodified Apache License 2.0 text; only the appendix copyright line is ours. | Standard text. |
 | `kb/` (13 pillars) | Written for this repository in November 2026 from public standards and primary documentation (IETF RFCs, W3C/WHATWG specifications, vendor and distribution documentation, Quebec and Canadian statutes and regulator guidance, OWASP Top 10 as a category list). Drafted by independent writing passes that were barred from opening any third-party knowledge base. Every check cites its sources in `docs/sources.md` and `docs/sources.d/`. | Ours. Overlap with the previously used third-party security brain: highest check 2.4% of 6-word sequences, none above 10%; against the whole 11,274-file third-party skills folder none above 10%. This is evidence for review, not a legal finding. |
 | Everything else | Written for this repository. | Ours. |
+
+## How the content was written
+
+The checks, code and documentation in this repository were drafted by an AI assistant (Claude, by Anthropic) at the direction of Profitell Security Consulting, working only from the public sources listed in `docs/sources.md` and `docs/sources.d/`. The owner set the scope and decides what is published. The commit history carries a `Co-Authored-By` trailer for this reason. All checks stay `status: draft` until a named human reviewer is recorded in the check's front matter.
 
 ## What this repository does not contain
 
@@ -28,4 +32,4 @@ python3 tools/kb/lint.py
 python3 tools/kb/similarity.py PATH_TO_ANY_THIRD_PARTY_FOLDER --max 0.10
 ```
 
-A qualified lawyer should review the repository before it is made public.
+Legal and privacy content is informational and carries a "not legal advice" note; see the Disclaimer in `README.md`.

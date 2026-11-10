@@ -21,11 +21,13 @@ def scan_site(site, checks, rules, only=None, deep=False, timeout=10):
         if only and not any(wanted(checks.get(i, {"id": i}), only) for i in ids): continue
         try: out = fn(ctx)
         except Exception as ex: out = [(i, "MANUAL", f"runner error: {type(ex).__name__}: {ex}") for i in ids]
-        for cid, status, detail in out:
+        for item in out:
+            cid, status, detail = item[:3]; extra = item[3] if len(item) > 3 and isinstance(item[3], dict) else {}
             meta = checks.get(cid, {"id": cid, "title": "Scan note", "pillar": "scan", "severity": "info", "tags": []})
             if only and cid != "NOTE" and not wanted(meta, only): continue
             results.append({"id": cid, "status": status, "detail": detail, "severity": meta.get("severity", "info"), "title": meta.get("title", cid), "pillar": meta.get("pillar", "scan"),
-                            "tags": meta.get("tags", []), "kb": meta.get("file"), "source_type": "builtin"})
+                            "tags": meta.get("tags", []), "kb": meta.get("file"), "source_type": "builtin",
+                            "evidence": extra.get("evidence"), "confidence": extra.get("confidence")})
     stats = {"evaluated": 0, "hits": 0, "skipped": 0, "expired": 0}
     if rules and not (only and (only.get("ids") or only.get("pillars"))):
         sel = [r for r in rules if not only or not only.get("tags") or set(r.get("tags", [])) & only["tags"]]

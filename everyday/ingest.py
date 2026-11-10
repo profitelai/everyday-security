@@ -63,7 +63,7 @@ def ingest_rules(rtype, rows, source, license_, author, root=registry.ROOT, stam
     if added:
         os.makedirs(os.path.join(root, "data", "incoming"), exist_ok=True)
         out = os.path.join(root, "data", "incoming", f"{rtype}-{stamp or dt.datetime.now().strftime('%Y%m%d-%H%M%S')}.json")
-        json.dump({"pack": os.path.basename(out)[:-5], "version": "1", "rules": added}, open(out, "w"), indent=1, ensure_ascii=False)
+        with open(out, "w") as fh: json.dump({"pack": os.path.basename(out)[:-5], "version": "1", "rules": added}, fh, indent=1, ensure_ascii=False)
     return {"file": out, "added": len(added), "duplicates": len(dups), "invalid": len(bad), "bad": bad, "dups": dups}
 
 def approve(path, reviewer, root=registry.ROOT):
@@ -72,7 +72,9 @@ def approve(path, reviewer, root=registry.ROOT):
         r["status"] = "approved"; r["reviewed_by"] = reviewer; r["approved"] = today
         errs = registry.validate_rule(r, src, chk)
         if errs: raise ValueError(f"{r.get('id')}: {', '.join(errs)}")
-    dst = os.path.join(root, "data", "packs", os.path.basename(path)); json.dump(d, open(dst, "w"), indent=1, ensure_ascii=False); os.remove(path); return dst, len(d["rules"])
+    dst = os.path.join(root, "data", "packs", os.path.basename(path))
+    with open(dst, "w") as fh: json.dump(d, fh, indent=1, ensure_ascii=False)
+    os.remove(path); return dst, len(d["rules"])
 
 SECTIONS = [("why", "Why it matters"), ("test", "How to test"), ("pass", "Pass criteria"), ("fix", "Fix"), ("risk", "Risk and rollback")]
 
@@ -91,7 +93,7 @@ def ingest_checks(rows, root=registry.ROOT):
         if errs: bad.append((raw, errs)); continue
         fm = ["---", f"id: {r['id']}", f"title: \"{r['title']}\"", f"pillar: {r['pillar']}", f"severity: {r['severity']}", f"standards: [{', '.join(r.get('standards', []))}]",
               f"sources: [{', '.join(r['sources'])}]", f"tags: [{', '.join(r['tags'])}]", f"target: {r['target']}", f"method: {r['method']}", f"tool: {r['tool']}", f"automated: {r.get('automated', 'no')}",
-              "status: draft", f"reviewed: {today}", f"author: {r.get('author', 'Profitell Security Consulting')}", "---", ""]
+              "status: draft", f"drafted: {today}", f"author: {r.get('author', 'Profitell Security Consulting')}", "---", ""]
         body = [f"# {r['id']} · {r['title']}", ""] + sum([[f"## {h}", r[k], ""] for k, h in SECTIONS], [])
         p = os.path.join(root, "kb", r["pillar"], r["id"] + ".md"); os.makedirs(os.path.dirname(p), exist_ok=True)
         open(p, "w", encoding="utf-8").write("\n".join(fm + body)); added.append(r["id"]); chk[r["id"]] = {}

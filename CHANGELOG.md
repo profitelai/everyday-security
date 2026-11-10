@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+- New result status `INCONCLUSIVE` and recorded `evidence` plus `confidence` on findings (stored in the history database, shown in HTML, Markdown and CSV reports; older databases upgrade in place).
+- MAIL-007 rebuilt: the mail certificate is judged on three separate questions (chain, name, expiry). A name mismatch is a warning, and a failure only when MTA-STS enforce or DANE is published. A blocked port 25 is `INCONCLUSIVE`. The facilinvoice.ca case is a permanent regression test.
+- `tools/scanner/security_review.py`: every check cites a public standard (SPEC table); fixed dangling-CNAME, DKIM-selector and multi-cookie handling; SPF, DMARC and HSTS gaps are no longer rated as high-impact; firewall findings are labelled inferred with low confidence and capped in severity.
+- Added `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`; 34 more tests (66 total); closed files properly in `ingest.py`.
+- README: Alpha status banner and Disclaimer; the scan description now lists exactly what a scan sends (it wrongly said it never probes ports).
+- Check front matter: `reviewed` renamed to `drafted` (no human review has happened); "not legal advice" note added to the 12 checks that cite statutes or regulators; PROVENANCE states plainly that the content was drafted by an AI assistant.
+
 ## 0.2.0 - 2026-11-09
 - Data-driven scan engine (`everyday/`): runner groups plus JSON data packs (headers, path probes, banner versions, subdomain takeovers, DNS expectations), 64 seed rules.
 - Bulk ingest with validation, de-duplication and a pending-then-approve step; every rule carries source and licence.

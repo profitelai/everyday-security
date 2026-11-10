@@ -1,5 +1,6 @@
 """Shared vocabulary: statuses, severities, scoring."""
-STATUSES = ("FAIL", "WARN", "MANUAL", "PASS", "INFO")
+STATUSES = ("FAIL", "WARN", "INCONCLUSIVE", "MANUAL", "PASS", "INFO")
+CONFIDENCE = ("high", "medium", "low")
 SEV_ORDER = ("critical", "high", "medium", "low", "info")
 SEV_WEIGHT = {"critical": 10, "high": 6, "medium": 3, "low": 1, "info": 0}
 
@@ -9,7 +10,7 @@ def status_for_hit(severity):
 
 def score(results):
     """0-100, higher is better. Each failed check costs twice its severity weight, each warning one weight. Checks that
-    cannot be judged from outside (MANUAL), passes and notes cost nothing. A comparison aid, not a certification."""
+    cannot be judged from outside (MANUAL), checks without enough evidence (INCONCLUSIVE), passes and notes cost nothing. A comparison aid, not a certification."""
     pen = 0.0
     for r in results:
         w = SEV_WEIGHT.get(r.get("severity", "low"), 1)

@@ -11,11 +11,13 @@ method: manual-review
 tool: browser
 automated: no
 status: draft
-reviewed: 2026-11-09
+drafted: 2026-11-09
 author: Profitell Security Consulting
 ---
 
 # PRIV-001 · A named person is accountable for personal information and the contact and governance practices are published
+
+> Informational only, not legal advice. Laws, dates and time limits change; confirm the current text of the cited source or ask a qualified professional before relying on this check.
 
 ## Why it matters
 Under the Quebec private-sector Act (s. 3.1), the highest authority in the business is by default the person in charge of protecting personal information, may delegate the role in writing, and the title and contact details must be published on the website (or by another appropriate means if there is no site). Section 3.2 adds governance policies and practices: they must frame how information is kept and destroyed, define staff roles across its life cycle and provide a complaints process, be approved by that person, and be published in simple, clear language. PIPEDA's first principle asks for the same thing in federal terms: someone designated and accountable. If nobody can be found, access requests, complaints and incident reports have nowhere to land. This is operational guidance, not legal advice; confirm obligations for your situation with a qualified lawyer.

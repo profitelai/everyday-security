@@ -20,7 +20,10 @@ What it does (read-only, defensive, our own domains only):
     and e-mails a SHORT status to the owner ONLY when something new and significant appeared
     (new critical/high, certificate < 14 days, newly exposed port/path).
 
-Checks cover common public practice: TLS and certificate expiry, HTTP security headers, DMARC/SPF/DKIM, exposed paths and ports, file-upload exposure.
+Every check is tied to a public standard or primary documentation in SPEC below (RFCs, OWASP, W3C, vendor manuals). Where
+no standard exists the finding says "operational practice". Each finding carries a confidence level: results inferred
+from local configuration (for example the firewall picture) are marked low and must be confirmed from outside the
+server; a missing DKIM key at a guessed selector is not proof that DKIM is absent.
 Standard library only.
 """
 from __future__ import annotations
@@ -35,10 +38,52 @@ FROM_EMAIL = os.environ.get('SECURITY_REVIEW_FROM', 'security-review@localhost')
 SERVER_IP = os.environ.get('SECURITY_REVIEW_SERVER_IP', '')
 NGINX_DIR = '/etc/nginx/sites-enabled'
 TRIVY_REPORT = '/root/security-report.txt'
-UA = 'Mozilla/5.0 (compatible; EverydaySecurity/0.1; +https://github.com/profitelai/everyday-security)'
+UA = 'Mozilla/5.0 (compatible; EverydaySecurity/0.2; +https://github.com/profitelai/everyday-security)'
 TIMEOUT = 12
 SEVERITY_ORDER = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3, 'info': 4}
 CF_PREFIXES = ('104.16.', '104.17.', '104.18.', '104.19.', '104.2', '172.64.', '172.65.', '172.66.', '172.67.', '172.68.', '172.69.', '172.7', '188.114.', '162.158.', '141.101.', '108.162.', '173.245.', '103.21.', '103.22.', '103.31.', '190.93.', '197.234.', '198.41.')
+# Selectors worth trying: defaults of common mail servers and providers. A miss is not proof that DKIM is absent.
+DKIM_SELECTORS = ('mail', 'default', 'dkim', 'selector1', 'selector2', 'google', 'k1', 'k2', 's1', 's2', 'smtp', 'mandrill', 'mxvault', 'zoho', 'mailo')
+# Public basis for each check: (title, URL) from the primary sources in docs/sources.md. Keys ending in * match by prefix.
+SPEC = {
+    'dns-dangling': ('WSTG: Test for Subdomain Takeover', 'https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/10-Test_for_Subdomain_Takeover'),
+    'tls-legacy': ('RFC 8996: Deprecating TLS 1.0 and TLS 1.1', 'https://www.rfc-editor.org/rfc/rfc8996'),
+    'http-no-redirect': ('RFC 6797: HTTP Strict Transport Security', 'https://www.rfc-editor.org/rfc/rfc6797'),
+    'http-redirect-temp': ('RFC 9110: HTTP Semantics', 'https://www.rfc-editor.org/rfc/rfc9110'),
+    'hdr-hsts': ('RFC 6797: HTTP Strict Transport Security', 'https://www.rfc-editor.org/rfc/rfc6797'),
+    'hdr-hsts-short': ('RFC 6797: HTTP Strict Transport Security', 'https://www.rfc-editor.org/rfc/rfc6797'),
+    'hdr-xcto': ('OWASP Secure Headers Project', 'https://owasp.org/www-project-secure-headers/'),
+    'hdr-frame': ('OWASP Secure Headers Project', 'https://owasp.org/www-project-secure-headers/'),
+    'hdr-referrer': ('OWASP Secure Headers Project', 'https://owasp.org/www-project-secure-headers/'),
+    'hdr-permissions': ('OWASP Secure Headers Project', 'https://owasp.org/www-project-secure-headers/'),
+    'hdr-csp': ('Content Security Policy Level 3', 'https://www.w3.org/TR/CSP3/'),
+    'hdr-disclose-*': ('WSTG: Fingerprint Web Application Framework', 'https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/08-Fingerprint_Web_Application_Framework'),
+    'cookie-flags': ('Session Management Cheat Sheet', 'https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html'),
+    'path*': ('WSTG: Review Old Backup and Unreferenced Files for Sensitive Information', 'https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/04-Review_Old_Backup_and_Unreferenced_Files_for_Sensitive_Information'),
+    'listing*': ('nginx module ngx_http_autoindex_module', 'https://nginx.org/en/docs/http/ngx_http_autoindex_module.html'),
+    'mail-spf*': ('RFC 7208: Sender Policy Framework (SPF)', 'https://www.rfc-editor.org/rfc/rfc7208'),
+    'mail-dmarc*': ('RFC 7489: Domain-based Message Authentication, Reporting, and Conformance (DMARC)', 'https://www.rfc-editor.org/rfc/rfc7489'),
+    'mail-dkim': ('RFC 6376: DomainKeys Identified Mail (DKIM) Signatures', 'https://www.rfc-editor.org/rfc/rfc6376'),
+    'ufw-off': ('Firewalls (ufw), Ubuntu Server documentation', 'https://ubuntu.com/server/docs/how-to/security/firewalls/'),
+    'port-*': ('Packet filtering and firewalls', 'https://docs.docker.com/engine/network/packet-filtering-firewalls/'),
+    'fail2ban': ('jail.conf(5) manual page', 'https://manpages.debian.org/stable/fail2ban/jail.conf.5.en.html'),
+    'apt-pending': ('Automatic updates, Ubuntu Server documentation', 'https://documentation.ubuntu.com/server/how-to/software/automatic-updates/'),
+    'reboot': ('Automatic updates, Ubuntu Server documentation', 'https://documentation.ubuntu.com/server/how-to/software/automatic-updates/'),
+    'ssh-password': ('sshd_config(5) manual', 'https://man.openbsd.org/sshd_config'),
+    'ssh-root': ('sshd_config(5) manual', 'https://man.openbsd.org/sshd_config'),
+}
+OPERATIONAL = ('Operational practice (no formal standard)', None)
+
+
+def spec_for(check: str):
+    """(source title, URL) that backs a check; exact key first, then the longest matching prefix, else operational practice."""
+    if check in SPEC: return SPEC[check]
+    best = None
+    for k, v in SPEC.items():
+        if k.endswith('*') and check.startswith(k[:-1]) and (best is None or len(k) > len(best[0])): best = (k, v)
+    return best[1] if best else OPERATIONAL
+
+
 SENSITIVE_PATHS = [
     ('/.env', 'critical', r'^[A-Z_][A-Z0-9_]*=', 'environment file with secrets is downloadable'),
     ('/.git/HEAD', 'critical', r'^ref: refs/', 'git repository exposed (source + history + possibly secrets)'),
@@ -74,6 +119,12 @@ def dig(name: str, rtype: str) -> list[str]:
     return [l.strip() for l in out.splitlines() if l.strip() and not l.startswith('__error__')]
 
 
+def dig_rcode(name: str, rtype: str = 'A') -> str:
+    """DNS response status (NOERROR, NXDOMAIN, SERVFAIL, ...) from the public resolver, '' if there was no answer."""
+    m = re.search(r'status: (\w+)', sh(['dig', '@1.1.1.1', '+noall', '+comments', '+time=4', '+tries=2', rtype, name]))
+    return m.group(1) if m else ''
+
+
 def apex(host: str) -> str:
     parts = host.split('.')
     if len(parts) >= 3 and parts[-2] in ('co', 'com', 'qc', 'on') and parts[-1] == 'ca' and len(parts) >= 3:
@@ -82,15 +133,17 @@ def apex(host: str) -> str:
 
 
 class Finding:
-    def __init__(self, target, severity, check, title, detail='', fix=''):
-        self.target, self.severity, self.check, self.title, self.detail, self.fix = target, severity, check, title, detail, fix
+    def __init__(self, target, severity, check, title, detail='', fix='', confidence='high'):
+        self.target, self.severity, self.check, self.title, self.detail, self.fix, self.confidence = target, severity, check, title, detail, fix, confidence
 
     @property
     def key(self):  # stable identity across runs
         return hashlib.sha1(f'{self.target}|{self.check}|{self.title}'.encode()).hexdigest()[:12]
 
     def d(self):
-        return {'key': self.key, 'target': self.target, 'severity': self.severity, 'check': self.check, 'title': self.title, 'detail': self.detail, 'fix': self.fix}
+        label, url = spec_for(self.check)
+        return {'key': self.key, 'target': self.target, 'severity': self.severity, 'check': self.check, 'title': self.title, 'detail': self.detail, 'fix': self.fix,
+                'confidence': self.confidence, 'basis': label, 'basis_url': url}
 
 
 F: list[Finding] = []
@@ -119,21 +172,30 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
+def header_dict(msg) -> dict:
+    """Lower-cased header dict. Repeated headers are kept: Set-Cookie values are joined with newlines, others with ', '."""
+    out = {}
+    for k in {k.lower() for k in msg.keys()}:
+        vals = msg.get_all(k) or []
+        out[k] = '\n'.join(vals) if k == 'set-cookie' else ', '.join(vals)
+    return out
+
+
 def fetch(url: str, follow=False, method='GET') -> tuple[int | None, dict, bytes, str]:
     handlers = [] if follow else [NoRedirect()]
-    ctx = ssl.create_default_context(); ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE
+    ctx = ssl.create_default_context(); ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE   # on purpose: we still want to read pages from sites with broken certificates; only public URLs are requested
     opener = urllib.request.build_opener(*handlers, urllib.request.HTTPSHandler(context=ctx))
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': '*/*'}, method=method)
     try:
         r: HTTPResponse = opener.open(req, timeout=TIMEOUT)
         body = r.read(200_000)
-        return r.status, {k.lower(): v for k, v in r.headers.items()}, body, r.geturl()
+        return r.status, header_dict(r.headers), body, r.geturl()
     except urllib.error.HTTPError as e:
         try:
             body = e.read(200_000)
         except Exception:  # noqa: BLE001
             body = b''
-        return e.code, {k.lower(): v for k, v in e.headers.items()}, body, url
+        return e.code, header_dict(e.headers), body, url
     except Exception as e:  # noqa: BLE001
         return None, {'__error__': str(e)[:120]}, b'', url
 
@@ -145,10 +207,18 @@ def check_dns(host: str) -> dict:
     ips = [x for x in a if re.match(r'^\d+\.\d+\.\d+\.\d+$', x)]
     info['cloudflare'] = any(ip.startswith(CF_PREFIXES) for ip in ips)
     info['direct'] = SERVER_IP in ips
-    if cname and not ips:
-        add(host, 'high', 'dns-dangling', 'CNAME points to a name that does not resolve',
-            f'CNAME {cname[0]} has no A record. Subdomain takeover risk if the target is a third-party service.',
-            'Remove the CNAME or point it at a live target.')
+    addr6 = [x for x in aaaa if ':' in x]
+    info['dangling'] = None
+    if cname and not ips and not addr6:     # a CNAME that resolves through AAAA is not dangling
+        target = cname[0].rstrip('.'); rc = dig_rcode(target, 'A'); info['dangling'] = rc
+        if rc == 'NXDOMAIN':
+            add(host, 'high', 'dns-dangling', 'CNAME points to a name that does not exist',
+                f'CNAME {target} answers NXDOMAIN. Subdomain takeover risk if the target is a third-party service someone else can claim.',
+                'Remove the CNAME or point it at a live target.')
+        elif rc == 'NOERROR':
+            add(host, 'info', 'dns-cname-noaddr', 'CNAME target exists but has no address records', f'{target} has no A or AAAA record. Not a takeover risk by itself.', 'Confirm the target is meant to be empty.', confidence='medium')
+        else:
+            add(host, 'info', 'dns-dangling-unverified', 'Could not verify whether a CNAME target exists', f'{target}: resolver status {rc or "no answer"}.', 'Re-run later.', confidence='low')
     if not a and not cname:
         add(host, 'info', 'dns-none', 'No DNS record (served by nginx but not resolvable)', 'Dead vhost; harmless but clutter.', 'Remove the nginx server block or add DNS.')
     elif ips and not info['cloudflare'] and not info['direct']:
@@ -180,7 +250,7 @@ def check_tls(host: str, resolvable: bool) -> dict:
     # legacy protocol acceptance (direct origins only; Cloudflare edge is managed by Cloudflare)
     for proto_name, flag in (('TLSv1', getattr(ssl, 'OP_NO_TLSv1_1', 0) | getattr(ssl, 'OP_NO_TLSv1_2', 0) | getattr(ssl, 'OP_NO_TLSv1_3', 0)),):
         try:
-            c = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT); c.check_hostname = False; c.verify_mode = ssl.CERT_NONE
+            c = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT); c.check_hostname = False; c.verify_mode = ssl.CERT_NONE   # on purpose: only tests whether an old protocol version is accepted
             import warnings
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')
@@ -189,6 +259,18 @@ def check_tls(host: str, resolvable: bool) -> dict:
                 add(host, 'medium', 'tls-legacy', f'Server still accepts {s3.version()}', 'TLS 1.0/1.1 are deprecated (RFC 8996).', 'Set ssl_protocols TLSv1.2 TLSv1.3 in nginx.')
         except Exception:  # noqa: BLE001
             pass
+    return out
+
+
+def cookie_issues(set_cookie: str) -> list:
+    """[(cookie name, [missing attributes])] for every cookie in a (newline-joined) Set-Cookie value; Cloudflare's own cookies are skipped."""
+    out = []
+    for c in [x for x in str(set_cookie or '').split('\n') if x.strip()]:
+        name = c.split('=', 1)[0].strip()
+        if name.lower().startswith(('__cf', 'cf_', '_cf')): continue
+        flags = {x.strip().lower().split('=')[0] for x in c.split(';')[1:]}
+        missing = [m for m, k in (('Secure', 'secure'), ('HttpOnly', 'httponly')) if k not in flags]
+        if missing: out.append((name, missing))
     return out
 
 
@@ -214,7 +296,7 @@ def check_http(host: str, resolvable: bool) -> dict:
         add(host, 'medium', 'https-5xx', f'Homepage returns {st}', 'Site is erroring for visitors.', 'Check the application / upstream.')
     hs = hd.get('strict-transport-security', '')
     if not hs:
-        add(host, 'medium', 'hdr-hsts', 'Missing Strict-Transport-Security', 'Without HSTS a first visit over HTTP can be intercepted.', 'add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;')
+        add(host, 'low', 'hdr-hsts', 'Missing Strict-Transport-Security', 'Without HSTS a browser that first connects over HTTP can be downgraded (RFC 6797). A hardening gap, not a vulnerability by itself; it matters most when the site does not redirect to HTTPS.', 'add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;')
     else:
         m = re.search(r'max-age=(\d+)', hs)
         if m and int(m.group(1)) < 15552000: add(host, 'low', 'hdr-hsts-short', f'HSTS max-age is short ({m.group(1)}s)', 'Recommended at least 6 months.', 'Raise max-age to 31536000.')
@@ -229,14 +311,12 @@ def check_http(host: str, resolvable: bool) -> dict:
         v = hd.get(h, '')
         if v and re.search(r'\d', v) and v.lower() != 'cloudflare':
             add(host, 'low', f'hdr-disclose-{h}', f'{h} header reveals a version', f'{h}: {v}', 'Hide versions (server_tokens off; remove X-Powered-By).')
-    cookies = [c for k, c in hd.items() if k == 'set-cookie'] if isinstance(hd.get('set-cookie'), str) else []
-    if hd.get('set-cookie'):
-        for c in str(hd['set-cookie']).split('\n'):
-            cl = c.lower()
-            if 'secure' not in cl or 'httponly' not in cl:
-                if not cl.startswith(('__cf', 'cf_')):
-                    add(host, 'medium', 'cookie-flags', 'Cookie set without Secure and HttpOnly', c.split(';')[0][:80], 'Set Secure; HttpOnly; SameSite=Lax on session cookies.')
-                    break
+    issues = cookie_issues(hd.get('set-cookie', ''))
+    if issues:
+        names = ', '.join(f"{n} (no {'/'.join(m)})" for n, m in issues[:5])
+        add(host, 'low', 'cookie-flags', 'Cookie set without Secure or HttpOnly',
+            f'{names}. This only matters for cookies that hold a session or login token; other cookies (preferences, consent) may legitimately omit HttpOnly.',
+            'Set Secure; HttpOnly; SameSite=Lax on session cookies.', confidence='medium')
     home_hash = hashlib.sha1(body[:50000]).hexdigest()
     # sensitive paths: must return 200 with matching content and differ from the homepage (SPA catch-alls)
     for path, sev, rx, title in SENSITIVE_PATHS:
@@ -258,32 +338,38 @@ def check_mail_domain(domain: str) -> dict:
     spf = [t for t in txt if t.lower().startswith('v=spf1')]
     dmarc = [t.strip('"').replace('" "', '') for t in dig(f'_dmarc.{domain}', 'TXT')]
     dmarc = [t for t in dmarc if t.lower().startswith('v=dmarc1')]
-    dkim = dig(f'mail._domainkey.{domain}', 'TXT')
-    out.update({'spf': spf, 'dmarc': dmarc, 'dkim_mail_selector': bool(dkim)})
+    dkim = [sel for sel in DKIM_SELECTORS if dig(f'{sel}._domainkey.{domain}', 'TXT')]
+    out.update({'spf': spf, 'dmarc': dmarc, 'dkim_selectors': dkim, 'dkim_mail_selector': 'mail' in dkim})
     sends_mail = bool(out['mx']) or bool(spf)
     if not spf:
-        add(domain, 'high' if sends_mail else 'medium', 'mail-spf', 'No SPF record', 'Anyone can send mail as this domain and it passes nothing.', 'Publish v=spf1 ... -all (or ~all) in DNS.')
+        add(domain, 'medium' if sends_mail else 'low', 'mail-spf', 'No SPF record', 'Receivers cannot check which servers may send for this domain (RFC 7208). Not a vulnerability by itself; it weakens spoofing protection, especially without DMARC.', 'Publish v=spf1 ... -all (or ~all) in DNS.')
     elif spf and spf[0].rstrip().endswith('+all'):
         add(domain, 'high', 'mail-spf-all', 'SPF ends with +all', 'Authorises every sender on earth.', 'End with -all or ~all.')
     if not dmarc:
-        add(domain, 'high' if sends_mail else 'medium', 'mail-dmarc', 'No DMARC record', 'Spoofed mail is not rejected or reported (Gmail/Yahoo bulk-sender rules require DMARC).', 'Publish _dmarc TXT "v=DMARC1; p=quarantine; rua=mailto:dmarc@<domain>".')
+        add(domain, 'medium' if sends_mail else 'low', 'mail-dmarc', 'No DMARC record', 'Receivers get no instruction on spoofed mail and you get no reports (RFC 7489). Large mailbox providers also ask bulk senders for DMARC.', 'Publish _dmarc TXT "v=DMARC1; p=quarantine; rua=mailto:dmarc@<domain>".')
     else:
         m = re.search(r'\bp=(\w+)', dmarc[0])
         pol = m.group(1).lower() if m else 'none'
-        if pol == 'none': add(domain, 'medium', 'mail-dmarc-none', 'DMARC policy is p=none (monitor only)', dmarc[0][:120], 'Move to p=quarantine, then p=reject once reports are clean.')
+        if pol == 'none': add(domain, 'low', 'mail-dmarc-none', 'DMARC policy is p=none (monitor only)', dmarc[0][:120], 'Move to p=quarantine, then p=reject once reports are clean.')
         if 'rua=' not in dmarc[0]: add(domain, 'low', 'mail-dmarc-rua', 'DMARC has no reporting address (rua)', 'You never learn who spoofs the domain.', 'Add rua=mailto:dmarc@<domain>.')
     if sends_mail and not dkim:
-        add(domain, 'medium', 'mail-dkim', 'No DKIM key at selector "mail"', 'Outbound mail from this domain may not be signed.', 'Add the domain to opendkim SigningTable/KeyTable and publish mail._domainkey.')
+        add(domain, 'info', 'mail-dkim', f'No DKIM key found at {len(DKIM_SELECTORS)} common selectors',
+            'DKIM selectors cannot be listed from outside (RFC 6376), so this domain may sign with a selector we did not try. Check a real message header for DKIM-Signature: s=.',
+            'If mail is not signed, publish a key at <selector>._domainkey and configure the mail server to sign.', confidence='low')
     return out
 
 
 # ----------------------------------------------------------------------------- host checks
+INFERRED = (' Inferred from ufw, ss and the DOCKER-USER rules. IPv6, cloud firewalls and upstream filtering can change what is really reachable, '
+            'so confirm with a scan from outside this server.')
+
+
 def check_host() -> dict:
     out = {}
     ufw = sh(['ufw', 'status'])
     out['ufw_active'] = 'Status: active' in ufw
     if not out['ufw_active']:
-        add('host', 'critical', 'ufw-off', 'Firewall (ufw) is not active', 'Every listening service is reachable.', 'ufw enable with deny incoming by default.')
+        add('host', 'high', 'ufw-off', 'Host firewall (ufw) is not active', 'ufw reports inactive; a cloud firewall or nftables/iptables rules may still filter traffic.' + INFERRED, 'Enable ufw with deny incoming by default, or document the firewall that is used instead.', confidence='low')
     allow_any = set(); allow_from = defaultdict(set)
     for line in ufw.splitlines():
         m = re.match(r'^(\S+?)(?:/tcp|/udp)?(?: \(v6\))?\s+ALLOW\s+(?:IN\s+)?(\S+)', line.strip())
@@ -310,10 +396,10 @@ def check_host() -> dict:
     for port, proc in exposed.items():
         if port in expected:
             continue
-        sev = 'critical' if proc.startswith(('postgres', 'mysqld', 'mongod', 'redis')) else 'high' if port != '1111' else 'low'
+        sev = 'high' if proc.startswith(('postgres', 'mysqld', 'mongod', 'redis')) else 'medium' if port != '1111' else 'low'   # capped: inferred, not confirmed from outside
         title = f'Port {port} ({proc}) reachable from the whole internet'
         fix = 'Bind to 127.0.0.1 or restrict with ufw to your IP.' if port != '1111' else 'SSH on 1111 open to Anywhere: consider restricting to known IPs or keys-only + fail2ban (check both).'
-        add('host', sev, f'port-{port}', title, 'ufw allows Anywhere' if port in allow_any else 'docker published port, no DOCKER-USER drop', fix)
+        add('host', sev, f'port-{port}', title, ('ufw allows Anywhere.' if port in allow_any else 'Docker published port with no DOCKER-USER drop rule.') + INFERRED, fix, confidence='low')
     allow_restricted = {p: sorted(s) for p, s in allow_from.items() if p in public and p not in allow_any}
     out['allowlisted_ports'] = allow_restricted
     f2b = sh(['fail2ban-client', 'status'])
@@ -377,8 +463,9 @@ status: open
 **Where:** {f['target']}
 **Detail:** {f['detail']}
 **Fix:** {f['fix']}
+**Basis:** {f.get('basis', '')} · **Confidence:** {f.get('confidence', '')}
 
-Everyday Security 0.1.0: checks implemented from public standards (see docs/PROVENANCE.md).
+Everyday Security 0.2.0: checks implemented from public standards (see docs/PROVENANCE.md).
 Log of actions (append below):
 """)
             opened.append(key)
@@ -399,7 +486,7 @@ def render_html(stamp: str, hosts_info: dict, mail_info: dict, host_info: dict, 
     e = html.escape
     rows = ''.join(
         f"<tr class='{f['severity']}'><td><span class='pill' style='background:{sev_color[f['severity']]}'>{f['severity']}</span>{' <span class=new>NEW</span>' if f['key'] in new_keys else ''}</td>"
-        f"<td>{e(f['target'])}</td><td><b>{e(f['title'])}</b><div class=muted>{e(f['detail'])}</div></td><td class=fix>{e(f['fix'])}</td></tr>"
+        f"<td>{e(f['target'])}</td><td><b>{e(f['title'])}</b><div class=muted>{e(f['detail'])}</div><div class=muted>basis: {e(f.get('basis', ''))} · confidence: {e(f.get('confidence', ''))}</div></td><td class=fix>{e(f['fix'])}</td></tr>"
         for f in sorted(findings, key=lambda x: (SEVERITY_ORDER[x['severity']], x['target'])))
     by_host = defaultdict(list)
     for f in findings: by_host[f['target']].append(f['severity'])
@@ -414,7 +501,7 @@ def render_html(stamp: str, hosts_info: dict, mail_info: dict, host_info: dict, 
         for h, i in sorted(hosts_info.items()))
     mail_rows = ''.join(
         f"<tr><td>{e(d)}</td><td>{'yes' if m['mx'] else 'no'}</td><td>{e(m['spf'][0][:60]) if m['spf'] else '<b style=color:#b91c1c>missing</b>'}</td>"
-        f"<td>{e(m['dmarc'][0][:70]) if m['dmarc'] else '<b style=color:#b91c1c>missing</b>'}</td><td>{'yes' if m['dkim_mail_selector'] else 'no'}</td><td>{badge(d)}</td></tr>"
+        f"<td>{e(m['dmarc'][0][:70]) if m['dmarc'] else '<b style=color:#b91c1c>missing</b>'}</td><td>{e(', '.join(m.get('dkim_selectors', [])) or 'none found')}</td><td>{badge(d)}</td></tr>"
         for d, m in sorted(mail_info.items()))
     exposed = host_info.get('internet_exposed', {})
     exp_rows = ''.join(f"<li><b>{e(p)}</b> {e(proc)}</li>" for p, proc in exposed.items()) or '<li>none beyond web + mail</li>'
@@ -445,7 +532,7 @@ th,td{{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vert
 <h2>What the internet can reach on this server</h2><ul>{exp_rows}</ul>
 <div class=muted>Ports open only to specific IPs (your allow-list):</div><ul>{allow_rows}</ul>
 <h2>Hostnames</h2><table><tr><th>Host</th><th>Served via</th><th>Cert days left</th><th>HTTP→HTTPS</th><th>HTTPS status</th><th>security.txt</th><th>Worst</th></tr>{host_rows}</table>
-<h2>Mail domains</h2><table><tr><th>Domain</th><th>MX</th><th>SPF</th><th>DMARC</th><th>DKIM (mail)</th><th>Worst</th></tr>{mail_rows}</table>
+<h2>Mail domains</h2><table><tr><th>Domain</th><th>MX</th><th>SPF</th><th>DMARC</th><th>DKIM selectors found</th><th>Worst</th></tr>{mail_rows}</table>
 <p class=foot>Read-only review of our own properties. History: /var/lib/security-review (git). Tickets: /var/lib/security-review/tickets. Re-run: sudo python3 /opt/security-review/security_review.py</p>
 </main></body></html>"""
 

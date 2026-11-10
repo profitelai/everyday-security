@@ -11,11 +11,13 @@ method: manual-review
 tool: policy-review
 automated: no
 status: draft
-reviewed: 2026-11-09
+drafted: 2026-11-09
 author: Profitell Security Consulting
 ---
 
 # PRIV-010 · Access, rectification and portability requests are answered in writing within 30 days
+
+> Informational only, not legal advice. Laws, dates and time limits change; confirm the current text of the cited source or ask a qualified professional before relying on this check.
 
 ## Why it matters
 In Quebec, a person may ask in writing, addressed to the person in charge and with proof of identity, to see their information, get a copy, or have it corrected (ss. 27, 28, 30). The person in charge must reply in writing, promptly and no later than 30 days after receipt; silence counts as a refusal (s. 32). Access is free, though a reasonable charge for transcription, copying or sending is possible if the person is told the approximate amount first (s. 33). A refusal must give reasons, the legal provision relied on, the remedies and their deadline (s. 34). Information the person supplied that is computerized, and not created or inferred by you, must be given on request in a structured, commonly used format unless that raises serious practical difficulties (s. 27). The public must be told where and how to ask (s. 29). PIPEDA s. 8(3) also says 30 days (with limited extensions in s. 8(4)); GDPR Art. 12(3) says one month, extendable. This is operational guidance, not legal advice; confirm obligations for your situation with a qualified lawyer.

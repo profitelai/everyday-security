@@ -11,11 +11,13 @@ method: manual-review
 tool: browser
 automated: no
 status: draft
-reviewed: 2026-11-09
+drafted: 2026-11-09
 author: Profitell Security Consulting
 ---
 
 # PRIV-003 · Tracking and profiling tools stay off until the visitor chooses, and consent can be withdrawn
+
+> Informational only, not legal advice. Laws, dates and time limits change; confirm the current text of the cited source or ask a qualified professional before relying on this check.
 
 ## Why it matters
 Quebec's Act (s. 8.1) says that when you collect information using technology that can identify, locate or profile a person, you must first tell them about it and about the means available to activate those functions. Profiling means using personal information to assess traits such as interests or behaviour. The Act does not use the words "off by default" itself; the Commission reads the rule as meaning these functions cannot be switched on by default, the person must turn them on voluntarily. Section 9.1 (highest-confidentiality defaults for privacy settings) expressly leaves browser-cookie settings out, so do not rely on it for cookies. Consent must be clear, free, informed and tied to specific purposes (s. 14), and people may withdraw consent (s. 8). GDPR Art. 7(3) adds that withdrawing must be as easy as giving consent. This is operational guidance, not legal advice; confirm obligations for your situation with a qualified lawyer.

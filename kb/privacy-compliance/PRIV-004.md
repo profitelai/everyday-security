@@ -11,11 +11,13 @@ method: manual-review
 tool: spreadsheet
 automated: no
 status: draft
-reviewed: 2026-11-09
+drafted: 2026-11-09
 author: Profitell Security Consulting
 ---
 
 # PRIV-004 · An inventory records what personal data is held, why, where and who can reach it, and forms and logs stay minimal
+
+> Informational only, not legal advice. Laws, dates and time limits change; confirm the current text of the cited source or ask a qualified professional before relying on this check.
 
 ## Why it matters
 The Quebec Act requires purposes to be set before collecting (s. 4) and collection to be limited to what is necessary for them (s. 5); the Commission adds that in case of doubt a piece of information is treated as not necessary, and recommends listing the types of documents that hold personal information. Security measures must fit the sensitivity, quantity and medium (s. 10), and staff access only what their duties need (s. 20). PIPEDA asks for documented purposes (4.2.1) and no indiscriminate collection (4.4.1). GDPR Art. 30 requires a record of processing for businesses it covers. You cannot meet any of this for data you do not know you hold. This is operational guidance, not legal advice; confirm obligations for your situation with a qualified lawyer.

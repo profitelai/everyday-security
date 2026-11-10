@@ -18,7 +18,8 @@ Everyday Security separates **what to know** from **what to run** from **what to
 1. `Context` fetches the main page once (following up to three HTTPS redirects) and caches DNS answers.
 2. Runner groups (code) produce results for the checks they cover (`@group(name, *ids)`).
 3. `run_rules` evaluates every approved data rule against the same context. Path probes run only in deep mode.
-4. Results are scored (`FAIL` costs 2x severity weight, `WARN` 1x; MANUAL, PASS and INFO cost nothing) and graded A to F. The grade is a comparison aid, not a certification.
+4. A runner returns `(check id, status, detail)` or `(check id, status, detail, {"evidence": ..., "confidence": "high|medium|low"})`; evidence is stored with the result and shown in reports. Use `INCONCLUSIVE` when there is not enough evidence to judge (for example a blocked port).
+5. Results are scored (`FAIL` costs 2x severity weight, `WARN` 1x; MANUAL, INCONCLUSIVE, PASS and INFO cost nothing) and graded A to F. The grade is a comparison aid, not a certification.
 5. The run is stored; the report lists findings that are new or resolved since the previous run of the same site.
 
 ## Server audit

@@ -11,11 +11,13 @@ method: manual-review
 tool: policy-review
 automated: no
 status: draft
-reviewed: 2026-11-09
+drafted: 2026-11-09
 author: Profitell Security Consulting
 ---
 
 # PRIV-009 · Every service provider that handles personal data is bound by a written agreement
+
+> Informational only, not legal advice. Laws, dates and time limits change; confirm the current text of the cited source or ask a qualified professional before relying on this check.
 
 ## Why it matters
 Quebec's Act (s. 18.3) lets a business share personal information with a provider without individual consent when it is needed for a mandate or service, but only if the mandate or contract is in writing and states the measures the provider must take to keep the information confidential, to use it only for that job, and not to keep it after the contract ends. The provider must tell the person in charge without delay of any breach or attempted breach and let that person run confidentiality checks. A narrow carve-out exists for public bodies and members of a professional order; ask counsel if it applies. PIPEDA 4.1.3 keeps you responsible for data given to a processor and expects contractual or other means of comparable protection; GDPR Art. 28(3) lists contract terms for processors. The Commission also says you remain responsible for incidents at a third party holding your data. This is operational guidance, not legal advice; confirm obligations for your situation with a qualified lawyer.

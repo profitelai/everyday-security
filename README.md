@@ -5,6 +5,8 @@ By [Profitell Security Consulting](https://www.profitell.com/) · [profitell.com
 
 `version 0.2.0` · `Apache-2.0` · `Python 3.9+, standard library only` · `local-first: nothing is sent anywhere except the requests you ask for`
 
+> **Status: Alpha (0.2.x).** Experimental, for systems you own or have written permission to test. The 130 checks are drafts written from cited public sources and have not yet been reviewed by a named human security professional. Detection accuracy has not been measured against known-good and known-bad systems, so a finding can be wrong (false alarm) and a clean result is not proof of safety. Do not use it as the only basis for a security, compliance or legal decision. See the [Disclaimer](#disclaimer).
+
 **Tags:** `security-audit` `tls` `http-security-headers` `csp` `hsts` `cookies` `cors` `dns` `small-business` `checklist` `owasp-aligned` `python` `no-dependencies`
 
 ## At a glance
@@ -72,7 +74,7 @@ Every check is one file in `kb/<pillar>/<ID>.md` with the same sections: **why i
 
 A check is either **automatic** (the site checker can judge it from outside) or **manual** (it needs server access or a signed-in session; the file tells you how).
 
-Results are `PASS`, `WARN`, `FAIL` or `MANUAL`.
+Results are `PASS`, `WARN`, `FAIL`, `INCONCLUSIVE` (not enough evidence to judge, for example a blocked port) or `MANUAL` (needs a human). A finding can carry recorded evidence and a confidence level.
 
 ## How to run the tools
 
@@ -83,7 +85,7 @@ python3 tools/check/everyday_check.py example.com
 python3 tools/check/everyday_check.py example.com --json     # machine-readable
 ```
 
-Only test sites you own or have permission to test. It never probes paths, ports or logins.
+Only test sites you own or have written permission to test. A normal scan makes ordinary connections to the site (HTTPS on port 443, and a plain request on port 80 to see the redirect), DNS lookups, a zone-transfer request (`AXFR`) to each name server of the domain, and a connection to each mail server on port 25 to see whether it offers encryption. It never tries passwords or logins. Sensitive paths (such as `.env` and `.git`) are requested only with `--deep --i-own-these`.
 
 **2. Open the local workbench** (browse checks by pillar, tag and severity; run the site checker from a form; inspect provenance):
 
@@ -122,6 +124,10 @@ python3 tools/kb/similarity.py PATH...    # measure overlap with reference folde
 Everything here is written by Profitell Security Consulting from public standards (IETF RFCs, W3C and WHATWG specifications, vendor documentation). OWASP cheat sheets are cited, never copied. No third-party knowledge-base content is included. See [`docs/PROVENANCE.md`](docs/PROVENANCE.md).
 
 ## License
+
+## Disclaimer
+
+Everyday Security and its checks are provided for information only, "as is", without warranty of any kind (see `LICENSE`). Nothing here is legal, privacy, compliance, financial or professional security advice, and no check is a certification or a guarantee that a system is secure or compliant. Laws, standards, dates and time limits change; confirm the current text of the cited source or ask a qualified professional before relying on any check. You are responsible for having permission to scan any system, and for how you use the results. Profitell Security Consulting is not liable for scans you run or decisions you take.
 
 Apache-2.0, Copyright 2026 Profitell Security Consulting. See `LICENSE` and `NOTICE`.
 

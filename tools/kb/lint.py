@@ -2,7 +2,7 @@
 """Lint the knowledge base: required fields, known source IDs, required sections, unique IDs. Exit 1 on any problem."""
 import os, re, sys
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-REQ = ["id", "title", "pillar", "severity", "standards", "sources", "tags", "target", "method", "tool", "automated", "status", "reviewed", "author"]
+REQ = ["id", "title", "pillar", "severity", "standards", "sources", "tags", "target", "method", "tool", "automated", "status", "drafted", "author"]
 SECTIONS = ["## Why it matters", "## How to test", "## Pass criteria", "## Fix", "## Risk and rollback"]
 SEV = {"critical", "high", "medium", "low", "info"}
 LEDGERS = [os.path.join(ROOT, "docs", "sources.md")] + sorted(os.path.join(ROOT, "docs", "sources.d", f) for f in os.listdir(os.path.join(ROOT, "docs", "sources.d")) if f.endswith(".md"))

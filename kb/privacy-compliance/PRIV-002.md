@@ -11,11 +11,13 @@ method: manual-review
 tool: browser
 automated: no
 status: draft
-reviewed: 2026-11-09
+drafted: 2026-11-09
 author: Profitell Security Consulting
 ---
 
 # PRIV-002 · A plain-language privacy policy is published and matches what the site really collects
+
+> Informational only, not legal advice. Laws, dates and time limits change; confirm the current text of the cited source or ask a qualified professional before relying on this check.
 
 ## Why it matters
 A business that collects personal information through technology, a website included, must publish a confidentiality policy in clear, simple language and announce changes to it (Quebec Act, s. 8.2). At collection time people must also be told the purposes, the means of collection, their rights of access and rectification and their right to withdraw consent (s. 8), plus the third parties involved and any possibility of communication outside Quebec. The Commission d'acces a l'information describes a good policy as covering what is collected and why, who receives it, protections, cookie use, rights and remedies, and changes. A policy that does not match reality misleads visitors. For a business with no EU establishment, GDPR can still reach it where it offers goods or services to people in the EU or monitors their behaviour there (Art. 3(2)); whether that applies to you is a question for counsel. This is operational guidance, not legal advice; confirm obligations for your situation with a qualified lawyer.

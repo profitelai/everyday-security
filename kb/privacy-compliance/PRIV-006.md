@@ -11,11 +11,13 @@ method: manual-review
 tool: spreadsheet
 automated: no
 status: draft
-reviewed: 2026-11-09
+drafted: 2026-11-09
 author: Profitell Security Consulting
 ---
 
 # PRIV-006 · A confidentiality-incident register records every incident and is kept for five years
+
+> Informational only, not legal advice. Laws, dates and time limits change; confirm the current text of the cited source or ask a qualified professional before relying on this check.
 
 ## Why it matters
 Every business under the Quebec Act must keep a register of confidentiality incidents and give the Commission a copy on request (s. 3.8). An incident is any access, use or communication not authorized by law, a loss, or any other breach of protection (s. 3.6). The Commission stresses the register includes incidents that carry no serious-injury risk. The regulation on confidentiality incidents lists what each entry holds: description of the information, brief circumstances, when it happened, when you found out, number of people (or an estimate), the reasoning behind your risk conclusion, notice dates and any public notice with reasons, and the measures taken. Entries are kept up to date and for at least five years from when you became aware (Reg. ss. 7 and 8). PIPEDA s. 10.3 has its own record duty for security-safeguard breaches. This is operational guidance, not legal advice; confirm obligations for your situation with a qualified lawyer.

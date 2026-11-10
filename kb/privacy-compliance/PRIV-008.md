@@ -11,11 +11,13 @@ method: manual-review
 tool: spreadsheet
 automated: no
 status: draft
-reviewed: 2026-11-09
+drafted: 2026-11-09
 author: Profitell Security Consulting
 ---
 
 # PRIV-008 · A privacy impact assessment is done before new systems and before personal data goes outside Quebec
+
+> Informational only, not legal advice. Laws, dates and time limits change; confirm the current text of the cited source or ask a qualified professional before relying on this check.
 
 ## Why it matters
 Two triggers in the Quebec Act require a privacy impact assessment. Section 3.3: any project to acquire, develop or overhaul an information system or electronic service delivery system that involves collecting, using, communicating, keeping or destroying personal information. The person in charge must be consulted from the start, the depth must be proportionate to sensitivity, purposes, volume, distribution and medium, and the system must be able to hand a person their computerized data in a structured, commonly used format. Section 17: before communicating personal information outside Quebec (or entrusting someone outside Quebec to collect, use or keep it for you) you assess sensitivity, purposes, the protections including contractual ones, and the legal framework of the destination; the transfer may go ahead only if the assessment shows adequate protection, and a written agreement must reflect the results. The Commission's guidance treats other provinces as "outside Quebec" too, so a cloud region in Ontario counts. This is operational guidance, not legal advice; confirm obligations for your situation with a qualified lawyer.

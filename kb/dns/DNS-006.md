@@ -11,7 +11,7 @@ method: dns-lookup
 tool: dig
 automated: yes
 status: draft
-reviewed: 2026-11-09
+drafted: 2026-11-09
 author: Profitell Security Consulting
 ---
 

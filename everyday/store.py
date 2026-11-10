@@ -10,6 +10,9 @@ def conn(path=DB):
     CREATE TABLE IF NOT EXISTS results(run_id TEXT, host TEXT, check_id TEXT, status TEXT, severity TEXT, pillar TEXT, title TEXT, detail TEXT);
     CREATE TABLE IF NOT EXISTS site_scores(run_id TEXT, host TEXT, score INT, grade TEXT);
     CREATE INDEX IF NOT EXISTS r1 ON results(run_id, host);""")
+    cols = {r[1] for r in c.execute("PRAGMA table_info(results)")}          # older databases gain the evidence columns in place
+    for col in ("evidence", "confidence"):
+        if col not in cols: c.execute(f"ALTER TABLE results ADD COLUMN {col} TEXT")
     return c
 
 def save(run, run_id, path=DB):
@@ -18,7 +21,7 @@ def save(run, run_id, path=DB):
     c.execute("DELETE FROM results WHERE run_id=?", (run_id,)); c.execute("DELETE FROM site_scores WHERE run_id=?", (run_id,))
     for s in run["sites"]:
         c.execute("INSERT INTO site_scores VALUES (?,?,?,?)", (run_id, s["host"], s["score"], s["grade"]))
-        c.executemany("INSERT INTO results VALUES (?,?,?,?,?,?,?,?)", [(run_id, s["host"], r["id"], r["status"], r["severity"], r.get("pillar", ""), r.get("title", ""), r["detail"]) for r in s["results"]])
+        c.executemany("INSERT INTO results (run_id, host, check_id, status, severity, pillar, title, detail, evidence, confidence) VALUES (?,?,?,?,?,?,?,?,?,?)", [(run_id, s["host"], r["id"], r["status"], r["severity"], r.get("pillar", ""), r.get("title", ""), r["detail"], json.dumps(r["evidence"]) if r.get("evidence") is not None else None, r.get("confidence")) for r in s["results"]])
     c.commit(); c.close()
 
 def previous_run(run_id, path=DB):
