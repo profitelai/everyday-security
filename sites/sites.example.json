@@ -1,0 +1,6 @@
+{
+  "sites": [
+    {"host": "www.example.com", "name": "Example marketing site", "tags": ["production", "marketing"], "owner": "web team", "criticality": "high", "allow_deep": false, "subdomains": ["blog.example.com", "shop.example.com"]},
+    {"host": "app.example.com", "name": "Customer app", "tags": ["production", "app"], "owner": "engineering", "criticality": "critical", "allow_deep": true}
+  ]
+}

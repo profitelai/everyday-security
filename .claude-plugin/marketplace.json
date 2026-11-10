@@ -1,0 +1,17 @@
+{
+  "name": "profitell",
+  "owner": {
+    "name": "Profitell Security Consulting",
+    "url": "https://www.profitell.com/"
+  },
+  "plugins": [
+    {
+      "name": "everyday-security",
+      "source": "./",
+      "description": "Everyday Security scanner, knowledge base and data-intake tools by Profitell Security Consulting"
+    }
+  ],
+  "metadata": {
+    "description": "Security tools by Profitell Security Consulting"
+  }
+}

@@ -6,3 +6,8 @@ backups/
 imports/
 .env
 .cache.json
+
+# private data
+sites/network.json
+reports/
+data/incoming/*.json

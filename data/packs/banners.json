@@ -1,0 +1,84 @@
+{
+ "pack": "banners",
+ "description": "Banner-version rules (end-of-life software)",
+ "version": "1",
+ "rules": [
+  {
+   "id": "VER-0001",
+   "type": "banner_version",
+   "title": "Apache HTTP Server older than 2.4 (end of life)",
+   "severity": "high",
+   "source": "https://httpd.apache.org/",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "Server",
+   "regex": "Apache/(\\d+\\.\\d+(?:\\.\\d+)?)",
+   "bad_below": "2.4.0",
+   "tags": [
+    "end-of-life",
+    "apache"
+   ],
+   "check": "HDR-009"
+  },
+  {
+   "id": "VER-0002",
+   "type": "banner_version",
+   "title": "PHP older than 8.2 (out of security support as of Nov 2026; re-verify at php.net)",
+   "severity": "medium",
+   "source": "https://www.php.net/supported-versions.php",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "X-Powered-By",
+   "regex": "PHP/(\\d+\\.\\d+(?:\\.\\d+)?)",
+   "bad_below": "8.2.0",
+   "tags": [
+    "end-of-life",
+    "php"
+   ],
+   "check": "APP-009",
+   "expires": "2026-12-31"
+  },
+  {
+   "id": "VER-0003",
+   "type": "banner_version",
+   "title": "Microsoft IIS older than 10.0",
+   "severity": "medium",
+   "source": "https://learn.microsoft.com/en-us/lifecycle/",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "Server",
+   "regex": "Microsoft-IIS/(\\d+\\.\\d+)",
+   "bad_below": "10.0",
+   "tags": [
+    "end-of-life",
+    "iis"
+   ],
+   "check": "APP-009"
+  },
+  {
+   "id": "VER-0004",
+   "type": "banner_version",
+   "title": "OpenSSL older than 3.0 advertised in the Server header",
+   "severity": "medium",
+   "source": "https://openssl-library.org/policies/releasestrat/",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "Server",
+   "regex": "OpenSSL/(\\d+\\.\\d+\\.\\d+)",
+   "bad_below": "3.0.0",
+   "tags": [
+    "end-of-life",
+    "openssl"
+   ],
+   "check": "APP-009"
+  }
+ ]
+}

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 - 2026-11-09
+- Data-driven scan engine (`everyday/`): runner groups plus JSON data packs (headers, path probes, banner versions, subdomain takeovers, DNS expectations), 64 seed rules.
+- Bulk ingest with validation, de-duplication and a pending-then-approve step; every rule carries source and licence.
+- Fleet scans, SQLite history with new/resolved diffs, HTML/Markdown/CSV/JSON reports.
+- Workbench "Network scans" page; Claude plugin packaging; architecture and data-format docs; 22 unit tests.
+
 ## Unreleased
 - Full independent rewrite of the knowledge base: 8 pillars (tls, http-headers, mail-authentication, web-app, server-hardening, dns, backups-and-recovery, privacy-compliance), written from public standards. The site checker now also runs SPF, DMARC, MTA-STS/TLS-RPT, nameserver, DNSSEC and zone-transfer checks and follows redirects before judging headers.
 - Added `docs/REVIEW-QUEUE.md` (open verification items) and per-pillar source ledgers in `docs/sources.d/`.

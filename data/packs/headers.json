@@ -1,0 +1,149 @@
+{
+ "pack": "headers",
+ "description": "Extra HTTP response-header rules",
+ "version": "1",
+ "rules": [
+  {
+   "id": "HDR-R-0001",
+   "type": "http_header",
+   "title": "No Cross-Origin-Opener-Policy header",
+   "severity": "info",
+   "source": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "Cross-Origin-Opener-Policy",
+   "expect": "present",
+   "tags": [
+    "headers",
+    "isolation"
+   ]
+  },
+  {
+   "id": "HDR-R-0002",
+   "type": "http_header",
+   "title": "No Cross-Origin-Resource-Policy header",
+   "severity": "info",
+   "source": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Resource-Policy",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "Cross-Origin-Resource-Policy",
+   "expect": "present",
+   "tags": [
+    "headers",
+    "isolation"
+   ]
+  },
+  {
+   "id": "HDR-R-0003",
+   "type": "http_header",
+   "title": "Legacy X-XSS-Protection filter switched on (the filter is deprecated; rely on CSP)",
+   "severity": "info",
+   "source": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "X-XSS-Protection",
+   "expect": "not_regex",
+   "tags": [
+    "headers",
+    "xss"
+   ],
+   "value": "^\\s*1"
+  },
+  {
+   "id": "HDR-R-0004",
+   "type": "http_header",
+   "title": "X-Powered-By header is sent (discloses the technology)",
+   "severity": "low",
+   "source": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Powered-By",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "X-Powered-By",
+   "expect": "absent",
+   "tags": [
+    "headers",
+    "information-disclosure"
+   ],
+   "check": "HDR-009"
+  },
+  {
+   "id": "HDR-R-0005",
+   "type": "http_header",
+   "title": "X-AspNet-Version header is sent",
+   "severity": "low",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "X-AspNet-Version",
+   "expect": "absent",
+   "tags": [
+    "headers",
+    "information-disclosure"
+   ],
+   "check": "HDR-009"
+  },
+  {
+   "id": "HDR-R-0006",
+   "type": "http_header",
+   "title": "X-AspNetMvc-Version header is sent",
+   "severity": "low",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "X-AspNetMvc-Version",
+   "expect": "absent",
+   "tags": [
+    "headers",
+    "information-disclosure"
+   ],
+   "check": "HDR-009"
+  },
+  {
+   "id": "HDR-R-0007",
+   "type": "http_header",
+   "title": "Access-Control-Allow-Origin is a wildcard on the home page",
+   "severity": "info",
+   "source": "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "Access-Control-Allow-Origin",
+   "expect": "not_regex",
+   "tags": [
+    "headers",
+    "cors"
+   ],
+   "value": "^\\*$",
+   "check": "HDR-010"
+  },
+  {
+   "id": "HDR-R-0008",
+   "type": "http_header",
+   "title": "Expect-CT header still sent (deprecated)",
+   "severity": "info",
+   "source": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "header": "Expect-CT",
+   "expect": "absent",
+   "tags": [
+    "headers",
+    "tls"
+   ]
+  }
+ ]
+}

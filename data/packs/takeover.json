@@ -1,0 +1,97 @@
+{
+ "pack": "takeover",
+ "description": "Dangling-CNAME takeover fingerprints (need the site's subdomain list)",
+ "version": "1",
+ "rules": [
+  {
+   "id": "TKO-0001",
+   "type": "takeover",
+   "title": "Subdomain points at an unclaimed GitHub Pages site",
+   "severity": "high",
+   "source": "https://github.com/EdOverflow/can-i-take-over-xyz",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "cname_suffix": "github.io",
+   "fingerprint": "There isn't a GitHub Pages site here.",
+   "tags": [
+    "dns",
+    "takeover"
+   ],
+   "check": "DNS-007"
+  },
+  {
+   "id": "TKO-0002",
+   "type": "takeover",
+   "title": "Subdomain points at a Heroku app that does not exist",
+   "severity": "high",
+   "source": "https://github.com/EdOverflow/can-i-take-over-xyz",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "cname_suffix": "herokuapp.com",
+   "fingerprint": "No such app",
+   "tags": [
+    "dns",
+    "takeover"
+   ],
+   "check": "DNS-007"
+  },
+  {
+   "id": "TKO-0003",
+   "type": "takeover",
+   "title": "Subdomain points at an Amazon S3 bucket that does not exist",
+   "severity": "high",
+   "source": "https://github.com/EdOverflow/can-i-take-over-xyz",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "cname_suffix": "amazonaws.com",
+   "fingerprint": "NoSuchBucket",
+   "tags": [
+    "dns",
+    "takeover"
+   ],
+   "check": "DNS-007"
+  },
+  {
+   "id": "TKO-0004",
+   "type": "takeover",
+   "title": "Subdomain points at a closed Shopify shop",
+   "severity": "high",
+   "source": "https://github.com/EdOverflow/can-i-take-over-xyz",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "cname_suffix": "myshopify.com",
+   "fingerprint": "Sorry, this shop is currently unavailable",
+   "tags": [
+    "dns",
+    "takeover"
+   ],
+   "check": "DNS-007"
+  },
+  {
+   "id": "TKO-0005",
+   "type": "takeover",
+   "title": "Subdomain points at a Fastly service that is not configured",
+   "severity": "high",
+   "source": "https://github.com/EdOverflow/can-i-take-over-xyz",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "cname_suffix": "fastly.net",
+   "fingerprint": "Fastly error: unknown domain",
+   "tags": [
+    "dns",
+    "takeover"
+   ],
+   "check": "DNS-007"
+  }
+ ]
+}

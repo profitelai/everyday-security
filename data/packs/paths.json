@@ -1,0 +1,989 @@
+{
+ "pack": "paths",
+ "description": "Sensitive-path probes (deep scans only, signature based)",
+ "version": "1",
+ "rules": [
+  {
+   "id": "PRB-0001",
+   "type": "path_probe",
+   "title": "Environment file (.env) is downloadable",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/.env",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets"
+   ],
+   "body_regex": "(?m)^[A-Z][A-Z0-9_]{2,}=",
+   "not_body_regex": "<html",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0002",
+   "type": "path_probe",
+   "title": "Git repository metadata is exposed (.git/HEAD)",
+   "severity": "high",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/.git/HEAD",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "source-code"
+   ],
+   "body_regex": "^ref: refs/",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0003",
+   "type": "path_probe",
+   "title": "Git configuration is exposed (.git/config)",
+   "severity": "high",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/.git/config",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "source-code"
+   ],
+   "body_regex": "\\[core\\]",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0004",
+   "type": "path_probe",
+   "title": "macOS .DS_Store file is exposed",
+   "severity": "low",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/.DS_Store",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure"
+   ],
+   "body_regex": "Bud1",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0005",
+   "type": "path_probe",
+   "title": "phpinfo() page is exposed",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/phpinfo.php",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "php"
+   ],
+   "body_regex": "phpinfo\\(\\)|PHP Version",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0006",
+   "type": "path_probe",
+   "title": "PHP info page is exposed (info.php)",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/info.php",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "php"
+   ],
+   "body_regex": "phpinfo\\(\\)|PHP Version",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0007",
+   "type": "path_probe",
+   "title": "Apache server-status page is public",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/server-status",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "apache"
+   ],
+   "body_regex": "Apache Server Status",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0008",
+   "type": "path_probe",
+   "title": "Apache server-info page is public",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/server-info",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "apache"
+   ],
+   "body_regex": "Apache Server Information",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0009",
+   "type": "path_probe",
+   "title": "Password file (.htpasswd) is downloadable",
+   "severity": "high",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/.htpasswd",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets"
+   ],
+   "body_regex": "(?m)^[^:\\s]+:(\\$|\\{SHA\\}|[A-Za-z0-9./]{13}$)",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0010",
+   "type": "path_probe",
+   "title": ".htaccess is downloadable",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/.htaccess",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "apache"
+   ],
+   "body_regex": "RewriteEngine|AuthType|Require |php_value",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0011",
+   "type": "path_probe",
+   "title": "web.config is downloadable",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/web.config",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "iis"
+   ],
+   "body_regex": "<configuration",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0012",
+   "type": "path_probe",
+   "title": "WordPress configuration backup is downloadable (/wp-config.php.bak)",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/wp-config.php.bak",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets",
+    "wordpress"
+   ],
+   "body_regex": "DB_PASSWORD|DB_NAME",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0013",
+   "type": "path_probe",
+   "title": "WordPress configuration backup is downloadable (/wp-config.php~)",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/wp-config.php~",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets",
+    "wordpress"
+   ],
+   "body_regex": "DB_PASSWORD|DB_NAME",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0014",
+   "type": "path_probe",
+   "title": "WordPress configuration backup is downloadable (/wp-config.old)",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/wp-config.old",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets",
+    "wordpress"
+   ],
+   "body_regex": "DB_PASSWORD|DB_NAME",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0015",
+   "type": "path_probe",
+   "title": "WordPress configuration backup is downloadable (/wp-config.php.save)",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/wp-config.php.save",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets",
+    "wordpress"
+   ],
+   "body_regex": "DB_PASSWORD|DB_NAME",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0016",
+   "type": "path_probe",
+   "title": "WordPress configuration backup is downloadable (/wp-config.txt)",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/wp-config.txt",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets",
+    "wordpress"
+   ],
+   "body_regex": "DB_PASSWORD|DB_NAME",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0017",
+   "type": "path_probe",
+   "title": "Application configuration backup is downloadable (/config.php.bak)",
+   "severity": "high",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/config.php.bak",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets"
+   ],
+   "body_regex": "(?i)password|\\$db|DB_",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0018",
+   "type": "path_probe",
+   "title": "Application configuration backup is downloadable (/config.php~)",
+   "severity": "high",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/config.php~",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets"
+   ],
+   "body_regex": "(?i)password|\\$db|DB_",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0019",
+   "type": "path_probe",
+   "title": "Database dump is downloadable (/backup.sql)",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/backup.sql",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "database"
+   ],
+   "body_regex": "(?i)CREATE TABLE|INSERT INTO|MySQL dump",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0020",
+   "type": "path_probe",
+   "title": "Database dump is downloadable (/dump.sql)",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/dump.sql",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "database"
+   ],
+   "body_regex": "(?i)CREATE TABLE|INSERT INTO|MySQL dump",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0021",
+   "type": "path_probe",
+   "title": "Database dump is downloadable (/database.sql)",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/database.sql",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "database"
+   ],
+   "body_regex": "(?i)CREATE TABLE|INSERT INTO|MySQL dump",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0022",
+   "type": "path_probe",
+   "title": "Database dump is downloadable (/db.sql)",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/db.sql",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "database"
+   ],
+   "body_regex": "(?i)CREATE TABLE|INSERT INTO|MySQL dump",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0023",
+   "type": "path_probe",
+   "title": "Site archive is downloadable (/backup.zip)",
+   "severity": "high",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/backup.zip",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "backups"
+   ],
+   "body_regex": "^PK",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0024",
+   "type": "path_probe",
+   "title": "Site archive is downloadable (/site.zip)",
+   "severity": "high",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/site.zip",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "backups"
+   ],
+   "body_regex": "^PK",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0025",
+   "type": "path_probe",
+   "title": "Site archive is downloadable (/www.zip)",
+   "severity": "high",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/www.zip",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "backups"
+   ],
+   "body_regex": "^PK",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0026",
+   "type": "path_probe",
+   "title": "phpMyAdmin is reachable from the internet",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/phpmyadmin/",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "admin-panel",
+    "database"
+   ],
+   "body_regex": "phpMyAdmin",
+   "check": "APP-012"
+  },
+  {
+   "id": "PRB-0027",
+   "type": "path_probe",
+   "title": "Adminer database tool is reachable",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/adminer.php",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "admin-panel",
+    "database"
+   ],
+   "body_regex": "Adminer",
+   "check": "APP-012"
+  },
+  {
+   "id": "PRB-0028",
+   "type": "path_probe",
+   "title": "No security.txt contact file",
+   "severity": "info",
+   "source": "https://www.rfc-editor.org/rfc/rfc9116",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/.well-known/security.txt",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "missing",
+   "tags": [
+    "disclosure-policy"
+   ],
+   "body_regex": "(?mi)^Contact:"
+  },
+  {
+   "id": "PRB-0029",
+   "type": "path_probe",
+   "title": "WordPress REST API lists user accounts",
+   "severity": "low",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/wp-json/wp/v2/users",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "wordpress",
+    "user-enumeration"
+   ],
+   "body_regex": "\"slug\"",
+   "check": "APP-005"
+  },
+  {
+   "id": "PRB-0030",
+   "type": "path_probe",
+   "title": "WordPress XML-RPC endpoint is enabled",
+   "severity": "low",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/xmlrpc.php",
+   "expect_status": [
+    200,
+    405
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "wordpress"
+   ],
+   "body_regex": "XML-RPC server accepts POST requests only",
+   "check": "APP-005"
+  },
+  {
+   "id": "PRB-0031",
+   "type": "path_probe",
+   "title": "WordPress readme.html discloses the platform",
+   "severity": "info",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/readme.html",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "wordpress",
+    "information-disclosure"
+   ],
+   "body_regex": "WordPress",
+   "check": "HDR-009"
+  },
+  {
+   "id": "PRB-0032",
+   "type": "path_probe",
+   "title": "composer.json is downloadable (dependency list)",
+   "severity": "low",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/composer.json",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "dependencies"
+   ],
+   "body_regex": "\"require\"",
+   "check": "APP-009"
+  },
+  {
+   "id": "PRB-0033",
+   "type": "path_probe",
+   "title": "composer.lock is downloadable (exact dependency versions)",
+   "severity": "low",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/composer.lock",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "dependencies"
+   ],
+   "body_regex": "\"packages\"",
+   "check": "APP-009"
+  },
+  {
+   "id": "PRB-0034",
+   "type": "path_probe",
+   "title": "JetBrains IDE project file is exposed",
+   "severity": "low",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/.idea/workspace.xml",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure"
+   ],
+   "body_regex": "<project",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0035",
+   "type": "path_probe",
+   "title": "Spring Boot actuator /env is public",
+   "severity": "high",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/actuator/env",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "spring",
+    "secrets"
+   ],
+   "body_regex": "\"propertySources\"",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0036",
+   "type": "path_probe",
+   "title": "Symfony profiler is public",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/_profiler/",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "symfony",
+    "debug"
+   ],
+   "body_regex": "Symfony Profiler",
+   "check": "APP-010"
+  },
+  {
+   "id": "PRB-0037",
+   "type": "path_probe",
+   "title": "Laravel Telescope is public",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/telescope",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "laravel",
+    "debug"
+   ],
+   "body_regex": "Laravel Telescope",
+   "check": "APP-010"
+  },
+  {
+   "id": "PRB-0038",
+   "type": "path_probe",
+   "title": "Laravel log file is downloadable",
+   "severity": "high",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/storage/logs/laravel.log",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "laravel",
+    "logs"
+   ],
+   "body_regex": "\\[\\d{4}-\\d{2}-\\d{2} [^\\]]*\\] (local|production|staging)\\.",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0039",
+   "type": "path_probe",
+   "title": "PHP error log is downloadable (/error_log)",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/error_log",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "php",
+    "logs"
+   ],
+   "body_regex": "PHP (Warning|Notice|Fatal error)",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0040",
+   "type": "path_probe",
+   "title": "PHP error log is downloadable (/php_errorlog)",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/php_errorlog",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "php",
+    "logs"
+   ],
+   "body_regex": "PHP (Warning|Notice|Fatal error)",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0041",
+   "type": "path_probe",
+   "title": "npm configuration with registry tokens is downloadable",
+   "severity": "high",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/.npmrc",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets"
+   ],
+   "body_regex": "_authToken|registry=",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0042",
+   "type": "path_probe",
+   "title": "AWS credentials file is downloadable",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/.aws/credentials",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets",
+    "cloud"
+   ],
+   "body_regex": "aws_access_key_id",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0043",
+   "type": "path_probe",
+   "title": "Private SSH key is downloadable",
+   "severity": "critical",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/id_rsa",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "secrets"
+   ],
+   "body_regex": "BEGIN (RSA |OPENSSH )?PRIVATE KEY",
+   "check": "APP-011"
+  },
+  {
+   "id": "PRB-0044",
+   "type": "path_probe",
+   "title": "docker-compose.yml is downloadable",
+   "severity": "medium",
+   "source": "S-OWASP-A05",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "path": "/docker-compose.yml",
+   "expect_status": [
+    200
+   ],
+   "finding_when": "found",
+   "tags": [
+    "exposure",
+    "containers"
+   ],
+   "body_regex": "(?m)^services:",
+   "check": "APP-011"
+  }
+ ]
+}

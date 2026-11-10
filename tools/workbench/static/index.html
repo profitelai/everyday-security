@@ -38,13 +38,13 @@ const api=async(p,o)=>{const r=await fetch(p,o);const j=await r.json();if(!r.ok)
 const post=(p,b)=>api(p,{method:"POST",headers:{"X-Token":TOKEN,"Content-Type":"application/json"},body:JSON.stringify(b)});
 const toast=m=>{const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2800)};
 let BR=[],view="checks",cur=null,state={q:"",lic:"",sort:"id",dir:1};
-const NAV=[["checks","Security checks"],["scan","Check a website"],["overview","Provenance"],["inventory","Brain inventory"],["copyright","Copyright explorer"]];
+const NAV=[["checks","Security checks"],["scan","Check a website"],["fleet","Network scans"],["overview","Provenance"],["inventory","Brain inventory"],["copyright","Copyright explorer"]];
 function nav(){$("#nav").innerHTML=NAV.map(([k,l])=>`<button class="${view===k||(view==="brain"&&k==="inventory")?"on":""}" data-k="${k}">${l}</button>`).join("");
  $("#nav").onclick=e=>{const k=e.target.dataset.k;if(k){view=k;cur=null;render()}}}
 const sumP=o=>Object.values(o||{}).reduce((a,b)=>a+b,0);
 let BRP=null;const needBR=()=>BRP||(BRP=api("/api/brains").then(j=>{BR=j.brains}));
-async function load(){render();await needBR();if(!["checks","scan"].includes(view))render()}
-async function render(){nav();if(!["checks","scan"].includes(view)&&!BR.length){$("#app").textContent="Scanning this Mac… (first start takes a few seconds)";await needBR()}({checks,scan,overview,inventory,brain,copyright})[view]()}
+async function load(){render();await needBR();if(!["checks","scan","fleet"].includes(view))render()}
+async function render(){nav();if(!["checks","scan","fleet"].includes(view)&&!BR.length){$("#app").textContent="Scanning this Mac… (first start takes a few seconds)";await needBR()}({checks,scan,fleet,overview,inventory,brain,copyright})[view]()}
 
 function overview(){
  const sec=BR.filter(b=>b.baseline||b.is_baseline).sort((a,b)=>a.id.localeCompare(b.id));
@@ -146,6 +146,14 @@ async function checks(){
   const r=e.target.closest("tr.row");if(!r)return;
   if(r.dataset.p){state.kp=state.kp===r.dataset.p?"":r.dataset.p;checks();return}
   const c=C.find(x=>x.id===r.dataset.id);$("#cd").style.color="";$("#cd").innerHTML=`<div class="tag">${esc(c.pillar)}</div> <span class="tag sev-${esc(c.severity)}">${esc(c.severity)}</span> ${c.tags.map(t=>`<span class="pill">${esc(t)}</span>`).join("")}<div style="margin:6px 0" class="mono">Standards: ${esc(c.standards.join(", "))} · Sources: ${esc(c.sources.join(", "))}</div><div class="scroll" style="padding:4px 12px;border:1px solid var(--line);background:var(--panel)">${md(c.body)}</div>`}}
+
+async function fleet(){
+ const j=await api("/api/engine");const st=j.stats||{};const runs=j.runs||[];
+ $("#app").innerHTML=`<h2>Network scans &amp; data</h2>
+ <div class="note">Scans are run from the terminal (<span class="mono">./everyday.sh scan --sites sites/network.json</span>). Every run is stored with a full HTML report. Data points added later go in as <b>pending</b> and only go live after a person approves them.</div>
+ <div class="cards"><div class="card"><div class="n big">${st.checks??"-"}</div><div class="l">checks in ${st.pillars??"-"} pillars</div></div><div class="card"><div class="n big">${st.rules_approved??"-"}</div><div class="l">live data rules</div></div><div class="card"><div class="n big">${st.rules_pending??0}</div><div class="l">pending review</div></div><div class="card"><div class="n big">${st.sources??"-"}</div><div class="l">cited sources</div></div></div>
+ <h3>Data rules by type</h3><table><tbody>${Object.entries(st.rules_by_type||{}).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="num">${v}</td></tr>`).join("")}</tbody></table>
+ <h3>Recent runs</h3>${runs.length?`<table><thead><tr><th>Run</th><th>Mode</th><th>Sites (grade · fail/warn)</th><th>Report</th></tr></thead><tbody>${runs.map(r=>`<tr><td class="mono">${esc(r.id)}</td><td>${r.deep?"deep":"standard"}</td><td>${r.sites.map(s=>`${esc(s.host)} <b>${esc(s.grade)}</b> ${s.fail}/${s.warn}`).join("<br>")}</td><td><a href="/report?run=${esc(r.id)}" target="_blank" style="color:var(--acc)">open report</a></td></tr>`).join("")}</tbody></table>`:'<div class="note">No scans yet.</div>'}`}
 function scan(){
  $("#app").innerHTML=`<h2>Check a website</h2><div class="note"><b>Only test sites you own or are allowed to test.</b> The checker makes a handful of ordinary requests (one HTTPS page, one HTTP page, a few TLS handshakes, one DNS lookup, two requests with a test Origin header). It never probes paths, ports or logins. Private and local addresses are refused. Nothing leaves this Mac except those requests to the site you name.</div>
  <div class="bar"><input id="host" placeholder="example.com" style="min-width:300px"><label><input type="checkbox" id="ok"> I own this site or have permission to test it</label><button class="btn pri" id="go">Run checks</button></div><div id="res"></div>`;

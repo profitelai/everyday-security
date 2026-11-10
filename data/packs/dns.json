@@ -1,0 +1,67 @@
+{
+ "pack": "dns",
+ "description": "DNS record rules",
+ "version": "1",
+ "rules": [
+  {
+   "id": "DNR-0001",
+   "type": "dns_record",
+   "title": "DMARC is in monitoring-only mode (p=none)",
+   "severity": "low",
+   "source": "https://www.rfc-editor.org/rfc/rfc7489",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "name": "_dmarc.{apex}",
+   "rtype": "TXT",
+   "expect": "not_regex",
+   "value": "\\bp=none\\b",
+   "tags": [
+    "mail",
+    "dmarc"
+   ],
+   "check": "MAIL-004"
+  },
+  {
+   "id": "DNR-0002",
+   "type": "dns_record",
+   "title": "SPF allows any sender (+all)",
+   "severity": "high",
+   "source": "https://www.rfc-editor.org/rfc/rfc7208",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "name": "{apex}",
+   "rtype": "TXT",
+   "expect": "not_regex",
+   "value": "(^|\\s)\\+all",
+   "tags": [
+    "mail",
+    "spf"
+   ],
+   "check": "MAIL-001"
+  },
+  {
+   "id": "DNR-0003",
+   "type": "dns_record",
+   "title": "DMARC applies to only part of the mail (pct below 100)",
+   "severity": "low",
+   "source": "https://www.rfc-editor.org/rfc/rfc7489",
+   "license": "Profitell original",
+   "added": "2026-11-09",
+   "status": "approved",
+   "author": "Profitell Security Consulting",
+   "name": "_dmarc.{apex}",
+   "rtype": "TXT",
+   "expect": "not_regex",
+   "value": "pct=(?!100\\b)\\d+",
+   "tags": [
+    "mail",
+    "dmarc"
+   ],
+   "check": "MAIL-004"
+  }
+ ]
+}

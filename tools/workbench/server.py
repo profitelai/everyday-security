@@ -238,6 +238,22 @@ class Handler(BaseHTTPRequestHandler):
                 r = kb_root()
                 if not r: return self._send(200, {"checks": []})
                 return self._send(200, {"checks": parse_kb(r), "pillars_planned": ["incident-response", "cloud-and-saas-accounts", "wordpress-and-cms", "containers", "vendor-and-supply-chain"]})
+            if u.path == "/api/engine":
+                r = kb_root()
+                if not r: return self._send(200, {})
+                p = subprocess.run([sys.executable, "-m", "everyday", "stats"], capture_output=True, text=True, cwd=r, env={**os.environ, "PYTHONPATH": r}, timeout=60)
+                runs = []
+                rd = os.path.join(r, "reports", "runs")
+                for rid in sorted(os.listdir(rd), reverse=True)[:30] if os.path.isdir(rd) else []:
+                    try: j = json.load(open(os.path.join(rd, rid, "results.json"))); runs.append({"id": rid, "sites": [{"host": x["host"], "grade": x["grade"], "score": x["score"], "fail": x["tally"].get("FAIL", 0), "warn": x["tally"].get("WARN", 0)} for x in j["sites"]], "deep": j["deep"], "rules": j.get("rules_loaded")})
+                    except Exception: pass
+                return self._send(200, {"stats": json.loads(p.stdout or "{}"), "runs": runs})
+            if u.path == "/report":
+                r = kb_root(); rid = q.get("run", "")
+                if not r or not re.fullmatch(r"\d{8}-\d{6}", rid): return self._send(400, {"error": "bad run id"})
+                f = os.path.join(r, "reports", "runs", rid, "report.html")
+                if not os.path.exists(f): return self._send(404, {"error": "no such report"})
+                b = open(f, "rb").read(); self.send_response(200); self.send_header("Content-Type", "text/html; charset=utf-8"); self.send_header("Content-Length", str(len(b))); self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'"); self.end_headers(); self.wfile.write(b); return
             if u.path == "/api/copyright": return self._send(200, {"hits": hits_of(abspath(q["id"]))})
             if u.path == "/api/file":
                 _, p = safe(q["id"], q["path"])

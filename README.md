@@ -3,7 +3,7 @@
 **Practical, evidence-based security checks for small-business websites, servers and mail.**
 By [Profitell Security Consulting](https://www.profitell.com/) · [profitell.com](https://www.profitell.com/) · [github.com/profitelai/everyday-security](https://github.com/profitelai/everyday-security)
 
-`version 0.1.0` · `Apache-2.0` · `Python 3.9+, standard library only` · `local-first: nothing is sent anywhere except the requests you ask for`
+`version 0.2.0` · `Apache-2.0` · `Python 3.9+, standard library only` · `local-first: nothing is sent anywhere except the requests you ask for`
 
 **Tags:** `security-audit` `tls` `http-security-headers` `csp` `hsts` `cookies` `cors` `dns` `small-business` `checklist` `owasp-aligned` `python` `no-dependencies`
 
@@ -35,6 +35,21 @@ By [Profitell Security Consulting](https://www.profitell.com/) · [profitell.com
 Full list with tags, tools and severity: [`kb/INDEX.md`](kb/INDEX.md). The counts above are generated from the files in `kb/` by `tools/kb/build_index.py`, so they always match the content.
 
 **Planned pillars, not yet written:** incident response, cloud and SaaS accounts, WordPress and other CMS, containers, vendor and supply-chain risk. Nothing in this list is counted above.
+
+## The scan engine (v0.2)
+
+Everyday Security scans one site or your whole network, stores every run, and shows what changed since last time. It is built to take **thousands of new data points** without code changes.
+
+```bash
+./everyday.sh scan example.com                                   # one site
+./everyday.sh scan --sites sites/network.json                    # all your sites
+./everyday.sh scan --sites sites/network.json --deep --i-own-these   # also probe sensitive paths (your own sites only)
+./everyday.sh ingest --type path_probe --file new.csv --source <URL> --license <licence>   # add data (lands as pending)
+./everyday.sh approve data/incoming/<file>.json --reviewer "Name"                        # a person makes it live
+./everyday.sh list checks|packs|runs ; ./everyday.sh validate ; ./everyday.sh stats
+```
+
+Reports (HTML, Markdown, CSV, JSON) go to `reports/runs/<timestamp>/`. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/DATA-FORMAT.md`](docs/DATA-FORMAT.md). It also installs as a Claude plugin (`.claude-plugin/`) with `/scan` and `/add-data`.
 
 ## What you can check
 

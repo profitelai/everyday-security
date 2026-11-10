@@ -1,6 +1,6 @@
 [project]
 name = "everyday-security"
-version = "0.1.0"
+version = "0.2.0"
 description = "Everyday Security by Profitell Security Consulting: practical, evidence-based security reviews for small-business websites, servers and mail, plus a local provenance workbench."
 readme = "README.md"
 license = { text = "Apache-2.0" }
