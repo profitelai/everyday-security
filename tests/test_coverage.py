@@ -29,7 +29,7 @@ class Coverage(unittest.TestCase):
         self.assertRegex(self.text, r"Zero-day vulnerabilities \| No\.")
 
     def test_graphics_are_valid_svg(self):
-        for f in ("overview.svg", "by-pillar.svg"): xml.dom.minidom.parse(os.path.join(self.out, f))
+        for f in ("overview.svg", "targets.svg", "how-it-works.svg", "pillars.svg", "by-pillar.svg", "social-preview.svg"): xml.dom.minidom.parse(os.path.join(self.out, f))
 
     def test_committed_pages_are_current(self):
         with open(os.path.join(ROOT, "docs", "coverage", "README.md"), encoding="utf-8") as fh:

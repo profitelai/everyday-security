@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Generate docs/coverage/ (what Everyday Security can and cannot scan) from kb/ and data/packs/, so every number matches the content.
 usage: python3 tools/kb/build_coverage.py"""
-import collections, glob, html, json, os, re, sys
+import collections, glob, json, os, re, sys
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 sys.path.insert(0, ROOT)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import coverage_art as art  # noqa: E402
 from everyday import VERSION  # noqa: E402
 
 PILLARS = {  # pillar -> (title, what it covers, who it is for)
@@ -30,7 +32,7 @@ TARGETS = [  # what you can point it at
     ("WordPress or other CMS site", "Public paths plus a checklist", "Outside scan and guided checklist", "wordpress-and-cms"),
     ("Docker host", "Published ports plus a checklist", "Server audit and guided checklist", "containers"),
     ("Cloud and SaaS accounts", "Your admin consoles", "Guided checklist (human)", "cloud-and-saas-accounts"),
-    ("Business processes", "Backups, incidents, vendors, privacy", "Guided checklist (human)", "backups-and-recovery, incident-response, vendor-and-supply-chain, privacy-compliance"),
+    ("Business processes", "Backups, incidents, vendors", "Guided checklist (human)", "backups-and-recovery, incident-response, vendor-and-supply-chain, privacy-compliance"),
 ]
 NOT_DONE = [
     ("Zero-day vulnerabilities", "No. We do not hunt unknown flaws and we do not use a live exploit or CVE feed."),
@@ -77,35 +79,6 @@ def standards_by_family(checks):
     return fam
 
 
-def svg_overview(n):
-    tiles = [(n["checks"], "checks"), (n["pillars"], "pillars"), (n["auto"], "run automatically"), (n["host"], "server audit"), (n["rules"], "data rules"), (n["sources"], "public sources")]
-    w = 900; out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} 200" role="img" aria-label="Everyday Security coverage at a glance"><rect width="{w}" height="200" rx="14" fill="#0b1b2b"/>',
-                    '<text x="30" y="46" font-family="Helvetica,Arial,sans-serif" font-size="22" font-weight="700" fill="#ffffff">Everyday Security · coverage</text>',
-                    f'<text x="30" y="70" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#9fb3c8">Alpha {html.escape(VERSION)} · measured from the repository · by Profitell Security Consulting</text>']
-    for i, (v, l) in enumerate(tiles):
-        x = 30 + i * 140
-        out.append(f'<rect x="{x}" y="92" width="128" height="86" rx="10" fill="#12304a"/><text x="{x + 64}" y="135" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="34" font-weight="700" fill="#5cc8ff">{v}</text>'
-                   f'<text x="{x + 64}" y="161" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#cfe3f5">{html.escape(l)}</text>')
-    return "".join(out) + "</svg>\n"
-
-
-def svg_pillars(rows):
-    w, rowh, left, bar = 900, 30, 250, 520; h = 70 + rowh * len(rows); mx = max(r[1] + r[2] + r[3] for r in rows)
-    out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" role="img" aria-label="Checks per pillar by how they are run"><rect width="{w}" height="{h}" rx="14" fill="#ffffff" stroke="#d0d7de"/>',
-           '<text x="24" y="34" font-family="Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#0b1b2b">Checks per pillar, by how they are run</text>']
-    lx = 440
-    for color, label in (("#1a7f37", "automatic outside scan"), ("#0969da", "server audit"), ("#8c959f", "guided checklist")):
-        out.append(f'<rect x="{lx}" y="22" width="12" height="12" rx="2" fill="{color}"/><text x="{lx + 18}" y="33" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#57606a">{label}</text>'); lx += 170 if label.startswith("auto") else 105
-    for i, (name, a, hst, m) in enumerate(rows):
-        y = 56 + i * rowh; x = left
-        out.append(f'<text x="{left - 10}" y="{y + 15}" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#24292f">{html.escape(name)}</text>')
-        for v, color in ((a, "#1a7f37"), (hst, "#0969da"), (m, "#8c959f")):
-            if v:
-                wd = v / mx * bar; out.append(f'<rect x="{x:.1f}" y="{y}" width="{wd:.1f}" height="20" fill="{color}"/>'); x += wd
-        out.append(f'<text x="{x + 8:.1f}" y="{y + 15}" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#57606a">{a + hst + m}</text>')
-    return "".join(out) + "</svg>\n"
-
-
 def build(root=ROOT, out=None):
     out = out or os.path.join(root, "docs", "coverage"); os.makedirs(os.path.join(out, "pillars"), exist_ok=True)
     checks, rules = load(root); P = sorted({c["pillar"] for c in checks}); by = {p: [c for c in checks if c["pillar"] == p] for p in P}
@@ -115,15 +88,25 @@ def build(root=ROOT, out=None):
     n = {"checks": len(checks), "pillars": len(P), "auto": auto, "host": host, "rules": sum(rules.values()), "sources": sources}
     rows = [(PILLARS[p][0], sum(c["automated"] == "yes" for c in by[p]), sum(c["automated"] == "host" for c in by[p]), sum(c["automated"] == "no" for c in by[p])) for p in P]
     rows.sort(key=lambda r: -(r[1] + r[2] + r[3]))
-    open(os.path.join(out, "overview.svg"), "w", encoding="utf-8").write(svg_overview(n))
-    open(os.path.join(out, "by-pillar.svg"), "w", encoding="utf-8").write(svg_pillars(rows))
-    L = [f"# What Everyday Security can scan", "", "![Coverage at a glance](overview.svg)", "",
+    def count(*ps): return sum(len(by.get(p, [])) for p in ps)
+    tgt = [("globe", "Website or web app", "Public HTTPS pages", count("tls", "http-headers", "web-app"), [("OUTSIDE SCAN", art.AUTO), ("CHECKLIST", "#6b7280")]),
+           ("page", "WordPress and CMS", "WordPress, Drupal, Joomla", count("wordpress-and-cms"), [("OUTSIDE SCAN", art.AUTO), ("CHECKLIST", "#6b7280")]),
+           ("mail", "Email domain", "SPF, DKIM, DMARC, MX TLS", count("mail-authentication"), [("OUTSIDE SCAN", art.AUTO)]),
+           ("network", "DNS and subdomains", "Zones, takeover, DNSSEC", count("dns"), [("OUTSIDE SCAN", art.AUTO)]),
+           ("server", "Linux server", "SSH, firewall, patching", count("server-hardening"), [("SERVER AUDIT", art.INK), ("CHECKLIST", "#6b7280")]),
+           ("cube", "Docker host", "Images, ports, privileges", count("containers"), [("SERVER AUDIT", art.INK), ("CHECKLIST", "#6b7280")]),
+           ("cloud", "Cloud and SaaS", "Google, Microsoft, AWS", count("cloud-and-saas-accounts"), [("CHECKLIST", "#6b7280")]),
+           ("people", "Business processes", "Backups, incidents, vendors", count("backups-and-recovery", "incident-response", "vendor-and-supply-chain", "privacy-compliance"), [("CHECKLIST", "#6b7280")])]
+    cards = [(art.PILLAR_ICON[p], PILLARS[p][0], len(by[p]), sum(c["automated"] == "yes" for c in by[p]), sum(c["automated"] == "host" for c in by[p]), sum(c["automated"] == "no" for c in by[p])) for p in sorted(P, key=lambda p: -len(by[p]))]
+    for name, text in (("overview.svg", art.overview(n, VERSION)), ("targets.svg", art.targets(tgt)), ("how-it-works.svg", art.how_it_works(n)), ("pillars.svg", art.pillars(cards)), ("by-pillar.svg", art.by_pillar(rows)), ("social-preview.svg", art.social(n, VERSION))):
+        open(os.path.join(out, name), "w", encoding="utf-8").write(text)
+    L = [f"# What Everyday Security can scan", "", "![Coverage at a glance](overview.svg)", "", "![What you can point it at](targets.svg)", "",
          f"> **Status: Alpha ({VERSION}).** The checks are drafts written from cited public sources and have not yet been reviewed by a named human security professional or measured against known-good and known-bad systems. A finding can be wrong, and a clean result is not proof of safety. Only scan systems you own or have written permission to test. This page is generated from the repository by `tools/kb/build_coverage.py`, so the numbers always match the content.", "",
          "## At a glance", "", "| | |", "|---|---:|", f"| Security checks | **{n['checks']}** in **{n['pillars']}** pillars |",
          f"| Run automatically against a website or domain | **{auto}** |", f"| Run by the read-only server audit (on the server itself) | **{host}** |", f"| Guided checklists for a person (not automatable from outside) | **{manual}** |",
          f"| Data-driven scan rules | **{n['rules']}** ({', '.join(f'{v} {k.replace(chr(95), chr(32))}' for k, v in sorted(rules.items(), key=lambda x: -x[1]))}) |",
          f"| Severity | " + " · ".join(f"{sev[s]} {s}" for s in SEV if sev[s]) + " |", f"| Public sources cited | **{sources}** |", "",
-         "![Checks per pillar](by-pillar.svg)", "", "## What can I point it at?", "", "| Target | What is examined | How | Pillars |", "|---|---|---|---|"]
+         "![How a scan works](how-it-works.svg)", "", "![The 13 pillars](pillars.svg)", "", "![Checks per pillar](by-pillar.svg)", "", "## What can I point it at?", "", "| Target | What is examined | How | Pillars |", "|---|---|---|---|"]
     L += [f"| {a} | {b} | {c} | {d} |" for a, b, c, d in TARGETS]
     L += ["", "## How a check is run", "", "| Method | Count | What happens |", "|---|---:|---|",
           f"| Automatic outside scan | {auto} | Ordinary web requests, TLS handshakes, DNS lookups, and a look at the domain's mail servers. Plus {n['rules']} data rules: sensitive paths, headers, end-of-life versions, takeover fingerprints, DNS expectations. |",

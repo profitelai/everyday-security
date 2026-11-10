@@ -1,5 +1,7 @@
 # Everyday Security
 
+<p align="center"><a href="docs/coverage/README.md"><img src="docs/coverage/overview.svg" alt="Everyday Security at a glance: 130 checks, 13 pillars"></a></p>
+
 **Practical, evidence-based security checks for small-business websites, servers and mail.**
 By [Profitell Security Consulting](https://www.profitell.com/) · [profitell.com](https://www.profitell.com/) · [github.com/profitelai/everyday-security](https://github.com/profitelai/everyday-security)
 
@@ -12,6 +14,8 @@ By [Profitell Security Consulting](https://www.profitell.com/) · [profitell.com
 ## At a glance
 
 **[What can it scan? Targets, methods, limits (no zero-days), standards →](docs/coverage/README.md)**
+
+<p align="center"><a href="docs/coverage/README.md"><img src="docs/coverage/targets.svg" alt="What you can point it at: websites, WordPress, email, DNS, Linux servers, Docker, cloud accounts, business processes"></a></p>
 
 <!-- COUNTS:START -->
 | Measured from `kb/` | Count |

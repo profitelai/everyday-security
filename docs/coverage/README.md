@@ -2,6 +2,8 @@
 
 ![Coverage at a glance](overview.svg)
 
+![What you can point it at](targets.svg)
+
 > **Status: Alpha (0.2.0).** The checks are drafts written from cited public sources and have not yet been reviewed by a named human security professional or measured against known-good and known-bad systems. A finding can be wrong, and a clean result is not proof of safety. Only scan systems you own or have written permission to test. This page is generated from the repository by `tools/kb/build_coverage.py`, so the numbers always match the content.
 
 ## At a glance
@@ -16,6 +18,10 @@
 | Severity | 4 critical · 76 high · 45 medium · 5 low |
 | Public sources cited | **309** |
 
+![How a scan works](how-it-works.svg)
+
+![The 13 pillars](pillars.svg)
+
 ![Checks per pillar](by-pillar.svg)
 
 ## What can I point it at?
@@ -29,7 +35,7 @@
 | WordPress or other CMS site | Public paths plus a checklist | Outside scan and guided checklist | wordpress-and-cms |
 | Docker host | Published ports plus a checklist | Server audit and guided checklist | containers |
 | Cloud and SaaS accounts | Your admin consoles | Guided checklist (human) | cloud-and-saas-accounts |
-| Business processes | Backups, incidents, vendors, privacy | Guided checklist (human) | backups-and-recovery, incident-response, vendor-and-supply-chain, privacy-compliance |
+| Business processes | Backups, incidents, vendors | Guided checklist (human) | backups-and-recovery, incident-response, vendor-and-supply-chain, privacy-compliance |
 
 ## How a check is run
 
