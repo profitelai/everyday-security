@@ -1,7 +1,7 @@
 {
   "name": "everyday-security",
   "version": "0.2.0",
-  "description": "Everyday Security by Profitell Security Consulting: scan websites and networks against 78 checks in 8 pillars, add new data points safely, and read reports.",
+  "description": "Everyday Security by Profitell Security Consulting: scan websites and networks, audit a Linux server, look up how to fix any of 130 checks in 13 pillars, add new data points safely, and read reports.",
   "author": { "name": "Profitell Security Consulting", "url": "https://www.profitell.com/" },
   "homepage": "https://www.profitell.com/",
   "repository": "https://github.com/profitelai/everyday-security",
