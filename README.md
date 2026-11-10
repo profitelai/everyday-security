@@ -11,6 +11,8 @@ By [Profitell Security Consulting](https://www.profitell.com/) · [profitell.com
 
 ## At a glance
 
+**[What can it scan? Targets, methods, limits (no zero-days), standards →](docs/coverage/README.md)**
+
 <!-- COUNTS:START -->
 | Measured from `kb/` | Count |
 |---|---:|

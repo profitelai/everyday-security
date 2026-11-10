@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- `docs/coverage/`: generated "what we can scan" pages (targets, methods, what is not scanned including zero-days, standards referenced, one page per pillar, two graphics), built by `tools/kb/build_coverage.py` so the numbers always match the checks.
 - New result status `INCONCLUSIVE` and recorded `evidence` plus `confidence` on findings (stored in the history database, shown in HTML, Markdown and CSV reports; older databases upgrade in place).
 - MAIL-007 rebuilt: the mail certificate is judged on three separate questions (chain, name, expiry). A name mismatch is a warning, and a failure only when MTA-STS enforce or DANE is published. A blocked port 25 is `INCONCLUSIVE`. The facilinvoice.ca case is a permanent regression test.
 - `tools/scanner/security_review.py`: every check cites a public standard (SPEC table); fixed dangling-CNAME, DKIM-selector and multi-cookie handling; SPF, DMARC and HSTS gaps are no longer rated as high-impact; firewall findings are labelled inferred with low confidence and capped in severity.

@@ -15,8 +15,9 @@ python3 -m unittest discover -s tests
 python3 tools/kb/lint.py
 ./everyday.sh validate
 python3 tools/kb/build_index.py      # regenerates kb/INDEX.md and the README counts
+python3 tools/kb/build_coverage.py   # regenerates docs/coverage/ (the "what we scan" pages)
 ```
-All four must pass. Add a test for new behaviour. A confirmed false positive or false negative should arrive with a regression test.
+All five must pass. Add a test for new behaviour. A confirmed false positive or false negative should arrive with a regression test.
 
 ## Adding scan data
 Use the pending-then-approve route (`./everyday.sh ingest ...`, see `docs/DATA-FORMAT.md`) so every rule carries a source and a licence.
