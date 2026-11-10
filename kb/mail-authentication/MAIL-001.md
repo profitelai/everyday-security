@@ -5,7 +5,7 @@ pillar: mail-authentication
 severity: high
 standards: [RFC 7208]
 sources: [S-RFC7208, S-NIST-SP800-177]
-tags: [email, spf, dns, spoofing, domain]
+tags: [spf, spoofing, mail, dns, domain]
 target: domain
 method: dns-lookup
 tool: dig

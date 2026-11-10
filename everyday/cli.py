@@ -3,6 +3,7 @@ import argparse, datetime as dt, json, os, subprocess, sys
 from . import HOME, REPO, VERSION, fleet, ingest, registry, report, store
 from .runners import load_all, provided_ids
 
+AUTO = {"yes": "auto", "host": "server"}
 R = registry.ROOT; RUNS = os.path.join(R, "reports", "runs")
 
 def parse_only(a):
@@ -11,6 +12,23 @@ def parse_only(a):
         v = getattr(a, k, None)
         if v: o[k] = {x.strip() for x in v.split(",") if x.strip()}
     return o or None
+
+def _publish(run, as_json):
+    rid = dt.datetime.now().strftime("%Y%m%d-%H%M%S"); d = os.path.join(RUNS, rid); os.makedirs(d, exist_ok=True)
+    store.save(run, rid); df = store.diff(rid, store.previous_run(rid))
+    json.dump(run, open(os.path.join(d, "results.json"), "w"), indent=1)
+    open(os.path.join(d, "report.html"), "w").write(report.to_html(run, rid, df)); open(os.path.join(d, "report.md"), "w").write(report.to_markdown(run, rid, df)); open(os.path.join(d, "findings.csv"), "w").write(report.to_csv(run))
+    open(os.path.join(R, "reports", "latest.txt"), "w").write(rid)
+    if as_json: print(json.dumps(run, indent=1))
+    else: print(f"\nReport: {os.path.join(d, 'report.html')}\n        {os.path.join(d, 'report.md')}  ·  {os.path.join(d, 'findings.csv')}\n{HOME}")
+
+def cmd_audit_host(a):
+    from . import hostaudit
+    r = hostaudit.audit_result(a.label)
+    run = {"version": VERSION, "pack_hash": "", "rules_loaded": 0, "started": r["started"], "deep": False, "sites": [r], "finished": r["started"]}
+    _publish(run, a.json)
+    for x in r["results"]: print(f"  {x['status']:6} {x['id']:8} {x['detail'][:110]}")
+    return 1 if r["tally"].get("FAIL") and a.fail_on_fail else 0
 
 def cmd_scan(a):
     if a.sites: sites = fleet.load_sites(a.sites)
@@ -22,18 +40,12 @@ def cmd_scan(a):
     if a.deep and a.sites: sites = [s for s in sites if s.get("allow_deep")] or sys.exit("no selected site has allow_deep: true in the inventory")
     if not a.quiet: print(f"Scanning {len(sites)} site(s){' (deep)' if a.deep else ''} ...", file=sys.stderr)
     run = fleet.scan_fleet(sites, parse_only(a), a.deep, a.workers, a.include_pending, progress=(None if a.quiet else lambda r: print(f"  {r['grade']} {r['score']:>3}  {r['host']}  ({r['tally'].get('FAIL',0)} fail, {r['tally'].get('WARN',0)} warn, {r['seconds']}s)", file=sys.stderr)))
-    rid = dt.datetime.now().strftime("%Y%m%d-%H%M%S"); d = os.path.join(RUNS, rid); os.makedirs(d, exist_ok=True)
-    store.save(run, rid); df = store.diff(rid, store.previous_run(rid))
-    json.dump(run, open(os.path.join(d, "results.json"), "w"), indent=1)
-    open(os.path.join(d, "report.html"), "w").write(report.to_html(run, rid, df)); open(os.path.join(d, "report.md"), "w").write(report.to_markdown(run, rid, df)); open(os.path.join(d, "findings.csv"), "w").write(report.to_csv(run))
-    open(os.path.join(R, "reports", "latest.txt"), "w").write(rid)
-    if a.json: print(json.dumps(run, indent=1))
-    else: print(f"\nReport: {os.path.join(d, 'report.html')}\n        {os.path.join(d, 'report.md')}  ·  {os.path.join(d, 'findings.csv')}\n{HOME}")
+    _publish(run, a.json)
     return 1 if any(s["tally"].get("FAIL") for s in run["sites"]) and a.fail_on_fail else 0
 
 def cmd_list(a):
     if a.what == "checks":
-        for i, c in sorted(registry.load_checks().items()): print(f"{i:9} {c['pillar']:22} {c['severity']:8} {'auto' if c['automated']=='yes' else 'manual':6} {c['title'][:70]}")
+        for i, c in sorted(registry.load_checks().items()): print(f"{i:9} {c['pillar']:22} {c['severity']:8} {AUTO.get(c['automated'], 'manual'):6} {c['title'][:70]}")
     elif a.what == "packs":
         rules, _ = registry.load_packs(include_pending=True)
         for r in rules: print(f"{r['id']:11} {r['type']:15} {r['severity']:8} {r['status']:9} {r['title'][:70]}")
@@ -46,6 +58,8 @@ def cmd_validate(a):
     for f, i, errs in probs: print(f"PACK {os.path.basename(f)} {i}: {'; '.join(errs)}"); bad += 1
     missing = sorted(i for i, c in chk.items() if c["automated"] == "yes" and i not in provided_ids())
     for i in missing: print(f"KB check {i} says automated: yes but no runner provides it"); bad += 1
+    from . import hostaudit
+    for i in sorted(i for i, c in chk.items() if c["automated"] == "host" and i not in hostaudit.HOST_IDS): print(f"KB check {i} says automated: host but hostaudit does not judge it"); bad += 1
     p = subprocess.run([sys.executable, os.path.join(R, "tools", "kb", "lint.py")], capture_output=True, text=True); print(p.stdout.strip()); bad += p.returncode != 0
     print(f"{len(chk)} checks, {len(rules)} data rules (incl. pending), {len(probs)} invalid rules, {len(missing)} runner gaps"); return 1 if bad else 0
 
@@ -71,6 +85,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="everyday", description=f"Everyday Security {VERSION} by Profitell Security Consulting · {HOME}"); sp = ap.add_subparsers(dest="cmd", required=True)
     s = sp.add_parser("scan", help="scan one or many sites"); s.add_argument("site", nargs="*"); s.add_argument("--sites", help="inventory JSON file"); s.add_argument("--tag"); s.add_argument("--ids"); s.add_argument("--pillars"); s.add_argument("--tags")
     s.add_argument("--deep", action="store_true"); s.add_argument("--i-own-these", action="store_true"); s.add_argument("--workers", type=int, default=4); s.add_argument("--include-pending", action="store_true"); s.add_argument("--json", action="store_true"); s.add_argument("--quiet", action="store_true"); s.add_argument("--fail-on-fail", action="store_true"); s.set_defaults(f=cmd_scan)
+    h = sp.add_parser("audit-host", help="read-only audit of THIS server (run it on the server, ideally as root)"); h.add_argument("--label", default=os.uname().nodename); h.add_argument("--json", action="store_true"); h.add_argument("--fail-on-fail", action="store_true"); h.set_defaults(f=cmd_audit_host)
     l = sp.add_parser("list"); l.add_argument("what", choices=["checks", "packs", "runs"]); l.set_defaults(f=cmd_list)
     v = sp.add_parser("validate", help="validate the knowledge base, data packs and runners"); v.set_defaults(f=cmd_validate)
     i = sp.add_parser("ingest", help="add new data points as PENDING"); i.add_argument("--type", required=True, choices=list(registry.RULE_TYPES) + ["check"]); i.add_argument("--file", required=True); i.add_argument("--source", default=""); i.add_argument("--license", default="unspecified"); i.add_argument("--author", default="Profitell Security Consulting"); i.set_defaults(f=cmd_ingest)

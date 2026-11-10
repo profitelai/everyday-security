@@ -5,7 +5,7 @@ pillar: mail-authentication
 severity: medium
 standards: [RFC 3207, RFC 8461]
 sources: [S-RFC3207, S-RFC8461, S-NIST-SP800-177]
-tags: [email, starttls, tls, certificates, smtp]
+tags: [certificates, mail, tls]
 target: mail
 method: tls-handshake
 tool: openssl

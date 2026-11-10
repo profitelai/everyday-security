@@ -5,7 +5,7 @@ pillar: privacy-compliance
 severity: medium
 standards: ["Law 25 (Quebec)", "PIPEDA", "GDPR"]
 sources: [S-QC-P391, S-CAI-RESPONSABLE, S-PIPEDA, S-GDPR]
-tags: [privacy, law-25, access-requests, portability, process]
+tags: [law-25, privacy]
 target: process
 method: manual-review
 tool: policy-review

@@ -5,7 +5,7 @@ pillar: privacy-compliance
 severity: medium
 standards: ["Law 25 (Quebec)", "PIPEDA"]
 sources: [S-QC-P391, S-CAI-CONSERVATION, S-PIPEDA]
-tags: [privacy, law-25, retention, destruction, backups]
+tags: [law-25, retention, privacy, backup]
 target: process
 method: manual-review
 tool: spreadsheet

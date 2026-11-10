@@ -5,7 +5,7 @@ pillar: privacy-compliance
 severity: high
 standards: ["Law 25 (Quebec)"]
 sources: [S-QC-P391, S-CAI-RESPONSABLE, S-CAI-COMMUNICATION]
-tags: [privacy, law-25, impact-assessment, cross-border, cloud]
+tags: [law-25, privacy, cloud]
 target: process
 method: manual-review
 tool: spreadsheet

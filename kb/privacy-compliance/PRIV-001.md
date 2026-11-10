@@ -5,7 +5,7 @@ pillar: privacy-compliance
 severity: high
 standards: ["Law 25 (Quebec)", "PIPEDA"]
 sources: [S-QC-P391, S-CAI-RESPONSABLE, S-OPC-PRINCIPLES, S-PIPEDA]
-tags: [privacy, law-25, accountability, governance, website]
+tags: [law-25, governance, privacy, web]
 target: website
 method: manual-review
 tool: browser

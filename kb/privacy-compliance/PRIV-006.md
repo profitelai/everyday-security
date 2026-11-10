@@ -5,7 +5,7 @@ pillar: privacy-compliance
 severity: high
 standards: ["Law 25 (Quebec)", "PIPEDA"]
 sources: [S-QC-P391, S-QC-INCREG, S-CAI-INCIDENTS, S-PIPEDA]
-tags: [privacy, law-25, incident-register, breach, records]
+tags: [law-25, breach-response, privacy]
 target: process
 method: manual-review
 tool: spreadsheet

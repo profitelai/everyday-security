@@ -5,7 +5,7 @@ pillar: mail-authentication
 severity: high
 standards: [RFC 7489]
 sources: [S-RFC7489, S-GOOGLE-SENDER, S-NIST-SP800-177]
-tags: [email, dmarc, dns, reporting, domain]
+tags: [dmarc, monitoring, mail, dns, domain]
 target: domain
 method: dns-lookup
 tool: dig

@@ -119,4 +119,47 @@ class OutsideHelpers(unittest.TestCase):
         self.assertEqual(dmarc_policy("v=DMARC1; p=none"), ("none", 100))
         self.assertEqual(dmarc_policy("v=DMARC1"), (None, 100))
 
+class HostAudit(unittest.TestCase):
+    def test_ssh(self):
+        from everyday import hostaudit as h
+        self.assertEqual(h.judge_ssh(h.parse_sshd("port 22\npermitrootlogin no\npasswordauthentication no"))[0], "PASS")
+        self.assertEqual(h.judge_ssh(h.parse_sshd("permitrootlogin yes\npasswordauthentication yes"))[0], "FAIL")
+        self.assertEqual(h.judge_ssh(h.parse_sshd("permitrootlogin prohibit-password\npasswordauthentication yes"))[0], "WARN")
+        self.assertEqual(h.judge_ssh({})[0], "MANUAL")
+    def test_listeners(self):
+        from everyday import hostaudit as h
+        rows = h.parse_listeners("tcp LISTEN 0 511 0.0.0.0:443 0.0.0.0:*\ntcp LISTEN 0 80 127.0.0.1:3306 0.0.0.0:*\ntcp LISTEN 0 128 [::]:22 [::]:*")
+        self.assertEqual(h.judge_listeners(rows)[0], "PASS")
+        bad = h.parse_listeners("tcp LISTEN 0 80 0.0.0.0:6379 0.0.0.0:*"); self.assertEqual(h.judge_listeners(bad)[0], "FAIL")
+    def test_firewall(self):
+        from everyday import hostaudit as h
+        self.assertEqual(h.judge_firewall("Status: active\nDefault: deny (incoming), allow (outgoing)", "", "")[0], "PASS")
+        self.assertEqual(h.judge_firewall("Status: inactive", "", "-P INPUT ACCEPT")[0], "FAIL")
+    def test_docker(self):
+        from everyday import hostaudit as h
+        rows = h.parse_docker_ports("web\t0.0.0.0:8080->80/tcp, :::8080->80/tcp\ndb\t127.0.0.1:5432->5432/tcp\ncache\t0.0.0.0:6379->6379/tcp")
+        self.assertIn(("web", 8080), rows); self.assertNotIn(("db", 5432), rows); self.assertEqual(h.judge_docker(rows)[0], "FAIL")
+        self.assertEqual(h.judge_docker([])[0], "PASS"); self.assertEqual(h.judge_docker(None)[0], "INFO")
+    def test_updates_time_perms(self):
+        from everyday import hostaudit as h
+        self.assertEqual(h.judge_updates(False, False, 0)[0], "FAIL"); self.assertEqual(h.judge_updates(True, True, 0)[0], "WARN"); self.assertEqual(h.judge_updates(True, False, 3)[0], "PASS")
+        self.assertEqual(h.judge_time("System clock synchronized: yes")[0], "PASS"); self.assertEqual(h.judge_time("System clock synchronized: no")[0], "FAIL")
+        self.assertEqual(h.judge_perms([])[0], "PASS"); self.assertEqual(h.judge_perms(["world-writable /x"])[0], "FAIL")
+    def test_perm_scan_finds_issues(self):
+        from everyday import hostaudit as h
+        with tempfile.TemporaryDirectory() as d:
+            ok = os.path.join(d, "index.html"); open(ok, "w").close(); os.chmod(ok, 0o644)
+            bad = os.path.join(d, "up.php"); open(bad, "w").close(); os.chmod(bad, 0o666)
+            env = os.path.join(d, ".env"); open(env, "w").close(); os.chmod(env, 0o644)
+            r = h.find_perm_issues(roots=(d,)); self.assertTrue(any("up.php" in x for x in r) and any(".env" in x for x in r) and not any("index.html" in x for x in r))
+
+class CliSmoke(unittest.TestCase):
+    def test_commands_run(self):
+        import contextlib, io
+        from everyday import cli
+        for argv in (["list", "checks"], ["list", "packs"], ["stats"], ["validate"]):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf): rc = cli.main(argv)
+            self.assertEqual(rc, 0, argv); self.assertTrue(buf.getvalue().strip(), argv)
+
 if __name__ == "__main__": unittest.main()

@@ -5,7 +5,7 @@ pillar: mail-authentication
 severity: critical
 standards: [RFC 5321]
 sources: [S-RFC5321, S-NIST-SP800-177]
-tags: [email, open-relay, smtp, abuse, server]
+tags: [mail, server]
 target: mail
 method: server-config
 tool: swaks

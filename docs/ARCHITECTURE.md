@@ -21,6 +21,9 @@ Everyday Security separates **what to know** from **what to run** from **what to
 4. Results are scored (`FAIL` costs 2x severity weight, `WARN` 1x; MANUAL, PASS and INFO cost nothing) and graded A to F. The grade is a comparison aid, not a certification.
 5. The run is stored; the report lists findings that are new or resolved since the previous run of the same site.
 
+## Server audit
+`./everyday.sh audit-host` (run on the server, ideally as root) reads local state only (no changes, no network calls) and judges the server-hardening checks that cannot be seen from outside: SSH policy, firewall default, listening ports, Docker published ports, automatic updates, fail2ban, clock sync, web-root permissions and certificate renewal. The result is stored like a site scan, so reports, history and diffs work the same. Checks it covers are marked `automated: host`. Parsers are pure functions in `everyday/hostaudit.py` with fixture tests; Debian/Ubuntu-specific checks report MANUAL on other systems.
+
 ## Fleet scan
 `scan --sites sites/network.json` runs one site per worker thread, with tags to select subsets. Deep mode needs both `allow_deep: true` for the site and `--deep --i-own-these` on the command line.
 

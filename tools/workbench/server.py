@@ -237,7 +237,7 @@ class Handler(BaseHTTPRequestHandler):
             if u.path == "/api/kb":
                 r = kb_root()
                 if not r: return self._send(200, {"checks": []})
-                return self._send(200, {"checks": parse_kb(r), "pillars_planned": ["incident-response", "cloud-and-saas-accounts", "wordpress-and-cms", "containers", "vendor-and-supply-chain"]})
+                return self._send(200, {"checks": parse_kb(r), "pillars_planned": ["email-security-operations","network-and-wifi","endpoint-and-devices","physical-and-people"]})
             if u.path == "/api/engine":
                 r = kb_root()
                 if not r: return self._send(200, {})

@@ -5,6 +5,9 @@
 - Bulk ingest with validation, de-duplication and a pending-then-approve step; every rule carries source and licence.
 - Fleet scans, SQLite history with new/resolved diffs, HTML/Markdown/CSV/JSON reports.
 - 8 more checks now run automatically (27 of 78): DKIM key size, DMARC policy progress, deny-all for non-mail domains, MX STARTTLS, MX reverse DNS, private addresses in public DNS, cache headers, TLS cipher posture.
+- Five new draft pillars (51 checks, 130 total in 13 pillars): incident response, cloud and SaaS accounts, WordPress and CMS, containers, vendor and supply chain; 156 more cited sources (309 total).
+- `audit-host`: read-only server audit covering 9 checks (SSH, firewall, listening ports, Docker ports, updates, fail2ban, clock, web-root permissions, cert renewal).
+- Controlled tag vocabulary (`data/tags.json`, 68 tags, enforced by lint) replaces 196 ad-hoc tags.
 - Workbench "Network scans" page; Claude plugin packaging; architecture and data-format docs; 22 unit tests.
 
 ## Unreleased

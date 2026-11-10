@@ -7,6 +7,8 @@ SECTIONS = ["## Why it matters", "## How to test", "## Pass criteria", "## Fix",
 SEV = {"critical", "high", "medium", "low", "info"}
 LEDGERS = [os.path.join(ROOT, "docs", "sources.md")] + sorted(os.path.join(ROOT, "docs", "sources.d", f) for f in os.listdir(os.path.join(ROOT, "docs", "sources.d")) if f.endswith(".md"))
 src_ids = set(i for l in LEDGERS for i in re.findall(r"^\| (S-[A-Z0-9\-]+) \|", open(l).read(), re.M))
+import json
+VOCAB = set(json.load(open(os.path.join(ROOT, "data", "tags.json")))["tags"])
 errs, seen, n = [], {}, 0
 for dp, _, fn in os.walk(os.path.join(ROOT, "kb")):
     for f in sorted(fn):
@@ -24,6 +26,10 @@ for dp, _, fn in os.walk(os.path.join(ROOT, "kb")):
         for s in re.findall(r"S-[A-Z0-9\-]+", fm.get("sources", "")):
             if s not in src_ids: errs.append(f"{p}: unknown source {s}")
         if not re.findall(r"S-[A-Z0-9\-]+", fm.get("sources", "")): errs.append(f"{p}: no sources")
+        tg = [x.strip() for x in re.sub(r"[\[\]]", "", fm.get("tags", "")).split(",") if x.strip()]
+        if not 2 <= len(tg) <= 5: errs.append(f"{p}: needs 2 to 5 tags, has {len(tg)}")
+        for x in tg:
+            if x not in VOCAB: errs.append(f"{p}: tag '{x}' is not in data/tags.json")
         for s in SECTIONS:
             if s not in t: errs.append(f"{p}: missing section {s}")
 print(f"{n} checks, {len(src_ids)} sources, {len(errs)} problems")

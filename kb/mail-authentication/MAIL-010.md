@@ -5,7 +5,7 @@ pillar: mail-authentication
 severity: high
 standards: [NIST SP 800-63B]
 sources: [S-NIST-SP800-63B, S-CISA-MFA]
-tags: [email, mfa, passwords, accounts, process]
+tags: [mfa, passwords, authentication, mail]
 target: process
 method: manual-review
 tool: nmap

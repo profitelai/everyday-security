@@ -5,7 +5,7 @@ pillar: privacy-compliance
 severity: high
 standards: ["Law 25 (Quebec)", "PIPEDA", "GDPR"]
 sources: [S-QC-P391, S-CAI-COMMUNICATION, S-CAI-CONSERVATION, S-PIPEDA, S-GDPR]
-tags: [privacy, law-25, service-providers, contracts, processors]
+tags: [law-25, processors, privacy]
 target: process
 method: manual-review
 tool: policy-review

@@ -5,7 +5,7 @@ pillar: mail-authentication
 severity: medium
 standards: [RFC 8461, RFC 8460]
 sources: [S-RFC8461, S-RFC8460, S-NIST-SP800-177]
-tags: [email, mta-sts, tls-rpt, smtp, transport]
+tags: [mta-sts, mail, tls]
 target: domain
 method: dns-lookup
 tool: dig

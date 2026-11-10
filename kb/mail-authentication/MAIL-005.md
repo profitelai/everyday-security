@@ -5,7 +5,7 @@ pillar: mail-authentication
 severity: medium
 standards: [RFC 7208, RFC 7489, RFC 7505]
 sources: [S-RFC7208, S-RFC7489, S-RFC7505, S-RFC6376]
-tags: [email, parked-domains, spf, dmarc, null-mx]
+tags: [spf, dmarc, mail, domain]
 target: domain
 method: dns-lookup
 tool: dig

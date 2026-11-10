@@ -14,6 +14,8 @@ Run everything from the repository root (the folder that holds `everyday.sh`).
 - Reports land in `reports/runs/<stamp>/` as `report.html`, `report.md`, `findings.csv`, `results.json`; history is in `reports/history.db` and each report shows what is new or resolved since the previous run.
 - Only test sites the user owns or may test. Never run a deep scan against anyone else's site.
 
+- On a server itself (read-only, ideally as root): `./everyday.sh audit-host`
+
 ## Read results
 `FAIL`/`WARN` are findings, `MANUAL` means it cannot be judged from outside, `INFO` is a note. Every finding names its check ID; the fix, the test commands and the rollback are in `kb/<pillar>/<ID>.md`. Scores are a comparison aid, not a certification.
 

@@ -12,29 +12,35 @@ By [Profitell Security Consulting](https://www.profitell.com/) · [profitell.com
 <!-- COUNTS:START -->
 | Measured from `kb/` | Count |
 |---|---:|
-| Pillars | **8** |
-| Security checks | **78** |
+| Pillars | **13** |
+| Security checks | **130** |
 | Run automatically by the site checker | **27** |
-| Manual (server access, sign-in or human review) | **51** |
-| Tags | **196** |
-| Public sources cited | **153** |
+| Run by the server audit (`audit-host`, on the server itself) | **9** |
+| Manual (sign-in or human review) | **94** |
+| Tags | **68** |
+| Public sources cited | **309** |
 
-| Pillar | Checks | Critical | High | Medium | Low | Automated |
-|---|---:|---:|---:|---:|---:|---:|
-| [`backups-and-recovery`](kb/backups-and-recovery/) | 9 |  | 7 | 2 |  | 0/9 |
-| [`dns`](kb/dns/) | 9 |  | 4 | 4 | 1 | 4/9 |
-| [`http-headers`](kb/http-headers/) | 10 |  | 4 | 3 | 3 | 10/10 |
-| [`mail-authentication`](kb/mail-authentication/) | 10 | 1 | 5 | 4 |  | 8/10 |
-| [`privacy-compliance`](kb/privacy-compliance/) | 10 |  | 7 | 3 |  | 0/10 |
-| [`server-hardening`](kb/server-hardening/) | 12 |  | 7 | 5 |  | 0/12 |
-| [`tls`](kb/tls/) | 6 |  | 4 | 1 | 1 | 5/6 |
-| [`web-app`](kb/web-app/) | 12 | 1 | 7 | 4 |  | 0/12 |
-| **Total** | **78** | **2** | **45** | **26** | **5** | **27/78** |
+| Pillar | Checks | Critical | High | Medium | Low | Site scan | Server audit |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| [`backups-and-recovery`](kb/backups-and-recovery/) | 9 |  | 7 | 2 |  | 0/9 | 0 |
+| [`cloud-and-saas-accounts`](kb/cloud-and-saas-accounts/) | 10 | 1 | 6 | 3 |  | 0/10 | 0 |
+| [`containers`](kb/containers/) | 11 | 1 | 6 | 4 |  | 0/11 | 0 |
+| [`dns`](kb/dns/) | 9 |  | 4 | 4 | 1 | 4/9 | 0 |
+| [`http-headers`](kb/http-headers/) | 10 |  | 4 | 3 | 3 | 10/10 | 0 |
+| [`incident-response`](kb/incident-response/) | 10 |  | 7 | 3 |  | 0/10 | 0 |
+| [`mail-authentication`](kb/mail-authentication/) | 10 | 1 | 5 | 4 |  | 8/10 | 0 |
+| [`privacy-compliance`](kb/privacy-compliance/) | 10 |  | 7 | 3 |  | 0/10 | 0 |
+| [`server-hardening`](kb/server-hardening/) | 12 |  | 7 | 5 |  | 0/12 | 8 |
+| [`tls`](kb/tls/) | 6 |  | 4 | 1 | 1 | 5/6 | 1 |
+| [`vendor-and-supply-chain`](kb/vendor-and-supply-chain/) | 10 |  | 6 | 4 |  | 0/10 | 0 |
+| [`web-app`](kb/web-app/) | 12 | 1 | 7 | 4 |  | 0/12 | 0 |
+| [`wordpress-and-cms`](kb/wordpress-and-cms/) | 11 |  | 6 | 5 |  | 0/11 | 0 |
+| **Total** | **130** | **4** | **76** | **45** | **5** | **27/130** | **9** |
 <!-- COUNTS:END -->
 
 Full list with tags, tools and severity: [`kb/INDEX.md`](kb/INDEX.md). The counts above are generated from the files in `kb/` by `tools/kb/build_index.py`, so they always match the content.
 
-**Planned pillars, not yet written:** incident response, cloud and SaaS accounts, WordPress and other CMS, containers, vendor and supply-chain risk. Nothing in this list is counted above.
+**Newest pillars (draft, awaiting human technical review):** incident response, cloud and SaaS accounts, WordPress and CMS, containers, vendor and supply chain. Every figure in the table above includes them.
 
 ## The scan engine (v0.2)
 
@@ -46,6 +52,7 @@ Everyday Security scans one site or your whole network, stores every run, and sh
 ./everyday.sh scan --sites sites/network.json --deep --i-own-these   # also probe sensitive paths (your own sites only)
 ./everyday.sh ingest --type path_probe --file new.csv --source <URL> --license <licence>   # add data (lands as pending)
 ./everyday.sh approve data/incoming/<file>.json --reviewer "Name"                        # a person makes it live
+./everyday.sh audit-host                                        # run ON a server: read-only audit of SSH, firewall, ports, Docker, updates, fail2ban, clock, web-root permissions, cert renewal
 ./everyday.sh list checks|packs|runs ; ./everyday.sh validate ; ./everyday.sh stats
 ```
 

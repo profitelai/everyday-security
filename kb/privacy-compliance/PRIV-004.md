@@ -5,7 +5,7 @@ pillar: privacy-compliance
 severity: medium
 standards: ["Law 25 (Quebec)", "PIPEDA", "GDPR"]
 sources: [S-QC-P391, S-CAI-COLLECTE, S-CAI-CONSERVATION, S-PIPEDA, S-GDPR]
-tags: [privacy, law-25, data-inventory, minimisation, logs]
+tags: [law-25, logging, privacy]
 target: process
 method: manual-review
 tool: spreadsheet

@@ -5,7 +5,7 @@ pillar: mail-authentication
 severity: high
 standards: [RFC 6376, RFC 8301]
 sources: [S-RFC6376, S-RFC8301, S-NIST-SP800-177]
-tags: [email, dkim, dns, cryptography, domain]
+tags: [dkim, encryption, mail, dns, domain]
 target: domain
 method: dns-lookup
 tool: dig

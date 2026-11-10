@@ -5,7 +5,7 @@ pillar: mail-authentication
 severity: medium
 standards: [RFC 1912, RFC 5321]
 sources: [S-RFC1912, S-RFC5321, S-GOOGLE-SENDER]
-tags: [email, reverse-dns, ptr, deliverability, server]
+tags: [mail, server]
 target: mail
 method: dns-lookup
 tool: dig
