@@ -3,7 +3,7 @@
 <p align="center"><a href="docs/coverage/README.md"><img src="docs/coverage/overview.svg" alt="Everyday Security at a glance: 130 checks, 13 pillars"></a></p>
 
 **Practical, evidence-based security checks for small-business websites, servers and mail.**
-By [Profitell Security Consulting](https://www.profitell.com/) · [profitell.com](https://www.profitell.com/) · [github.com/profitelai/everyday-security](https://github.com/profitelai/everyday-security)
+By [Profitell Security Consulting](https://www.profitell.com/) · [github.com/profitelai/everyday-security](https://github.com/profitelai/everyday-security) · [Demo](https://www.danimaster.com/security-audit)
 
 `version 0.2.0` · `Apache-2.0` · `Python 3.9+, standard library only` · `local-first: nothing is sent anywhere except the requests you ask for`
 
