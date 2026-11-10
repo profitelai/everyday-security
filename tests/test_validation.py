@@ -114,3 +114,18 @@ class StatusAndEvidence(unittest.TestCase):
 
 
 if __name__ == "__main__": unittest.main()
+
+
+class TlsWording(unittest.TestCase):
+    """A client that cannot speak TLS 1.3 must not report 'TLS 1.3: no' about the site (seen with macOS LibreSSL, 2026-11-09)."""
+    def run_tls(self, v12, v13, old="refused"):
+        import ssl
+        from everyday.runners import tls
+        def fake(host, lo, hi, timeout=10): return v13 if lo == ssl.TLSVersion.TLSv1_3 else v12 if lo == ssl.TLSVersion.TLSv1_2 else old
+        ctx = mock.Mock(host="example.com", timeout=1); ctx.dig.return_value = []; ctx.main.return_value = {"error": "x"}
+        with mock.patch.object(tls, "tls_try", fake), mock.patch.object(tls.socket, "create_connection", side_effect=OSError):
+            return [x for x in tls.tls(ctx) if x[0] == "TLS-001"][0]
+    def test_unavailable_13_is_not_reported_as_no(self):
+        r = self.run_tls("TLSv1.2", "unavailable"); self.assertNotRegex(r[2], r"TLS 1\.3: no\b"); self.assertIn("not tested", r[2])
+    def test_real_answers_are_kept(self):
+        self.assertIn("TLS 1.3: yes", self.run_tls("TLSv1.2", "TLSv1.3")[2]); self.assertRegex(self.run_tls("TLSv1.2", "refused")[2], r"TLS 1\.3: no\b")

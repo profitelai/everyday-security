@@ -2,6 +2,11 @@ import datetime as dt, socket, ssl
 from . import group
 from ..context import tls_try, fetch
 
+def _says(result, version):
+    """Plain wording for one handshake attempt. 'unavailable' means this computer's Python cannot offer that version, which says nothing about the site."""
+    return "yes" if result == version else "not tested (this Python cannot offer it)" if result == "unavailable" else "no"
+
+
 @group("tls", "TLS-001", "TLS-002", "TLS-004", "TLS-005", "TLS-006")
 def tls(ctx):
     host, out = ctx.host, []
@@ -11,7 +16,7 @@ def tls(ctx):
     if old: out.append(("TLS-001", "FAIL", "accepts TLS " + " and ".join(old)))
     elif v12 in ("refused", "unavailable") and v13 in ("refused", "unavailable"): out.append(("TLS-001", "FAIL", "no modern TLS handshake succeeded"))
     elif untestable: out.append(("TLS-001", "MANUAL", f"1.2: {v12}, 1.3: {v13}; this Python/OpenSSL cannot offer TLS 1.0/1.1, so test those with nmap or an old openssl"))
-    else: out.append(("TLS-001", "PASS" if v13 != "refused" else "WARN", f"TLS 1.2: {'yes' if v12=='TLSv1.2' else 'no'}, TLS 1.3: {'yes' if v13=='TLSv1.3' else 'no'}; 1.0/1.1 refused"))
+    else: out.append(("TLS-001", "PASS" if v13 != "refused" else "WARN", f"TLS 1.2: {_says(v12, 'TLSv1.2')}, TLS 1.3: {_says(v13, 'TLSv1.3')}; 1.0/1.1 refused"))
     cipher = None
     try:
         c = ssl.create_default_context()
